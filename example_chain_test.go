@@ -25,7 +25,7 @@ func ExampleChain_Reduce() {
 	// Output: 7
 }
 
-func ExampleMappableChain_Map() {
+func ExampleMappable_Map() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int
 	res := it.NewMappable[string, int](it.From(n)).
@@ -36,7 +36,7 @@ func ExampleMappableChain_Map() {
 	// Output: [2 3 7]
 }
 
-func ExampleMappableChain_Map_second() {
+func ExampleMappable_Map_second() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int and int->string
 	res := it.NewMappable[string, int](it.From(n)).
