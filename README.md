@@ -3,17 +3,27 @@
 # The problem
 
 Go lacks ergonomic composable idiomatic iterator utility library. `it` builds
-on top of a (rangefunc experiment)[https://go.dev/wiki/RangefuncExperimen] for
+on top of a (rangefunc experiment)[https://go.dev/wiki/RangefuncExperiment] for
 go 1.22. Design goals are
 
- * be idiomatic: so it provides all functionality as pure functions and use experimental `iter` package under the hood
+ * be idiomatic: so it provides all functionality as pure functions and use
+   experimental `iter` package under the hood
  * be type safe: is uses generics everywhere
  * provide composable API when fits
  * support all Go's builtin types - slices/maps/channels
 
 Non goals
 
-> Supporting every possible iterator utility from lo/gubrak/Rust/Haskell/Scala/Python/whatever. Especially if those can be implemented via provided primitives.
+> Supporting every possible iterator utility from
+> lo/gubrak/Rust/Haskell/Scala/Python/whatever. Especially if those can be
+> easily implemented via provided primitives.
+
+IOW do not overwhelm users by all the functions it can provide.
+
+# Usage
+
+`it` provides methods, which can be chained together. Or a plain functions,
+which covers more use cases. However method chains makes a great sales pitch
 
 ```go
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
@@ -27,28 +37,15 @@ Non goals
 	// Output: [2 3 7]
 ```
 
-# Status
+Don't forget to install go 1.22 and `export GOEXPERIMENT=rangefunc`
 
-## Slices
+# WIP
 
- * slice to seq
- * filter seq
- * map seq
- * unit tests
-
-## Map
-
- * map to seq2
- * filter seq2
- * map seq2
-
-## WIP
-
-### How enumerable stuff or errors?
+## How enumerable stuff or errors?
 
 It turns out there are two equivalent solutions for both
 
-### "upgrade" to `iter.Seq2`
+## "upgrade" to `iter.Seq2`
 
 As shown in `Example_idea_errors` - this is probably more idiomatic solution
 for index numbers than errors as `iter.Seq2` is a direct equivalent of
@@ -57,21 +54,21 @@ for index numbers than errors as `iter.Seq2` is a direct equivalent of
 for index, value := range slice {}
 ```
 
-### provide a wrapper struct
+## provide a wrapper struct
 
 As shown in `Example_idea_enumerable` the whole problem can be solved by simply
 
 1. wrapper struct `Indexed`
 2. `Map(enumerable)` maps the sequence into sequence with indices
 
-### Conclusion
+## Conclusion
 
 Maybe the best solution is to provide both
 
 1. an idiomatic way how to "upgrade" the iter.Seq into iter.Seq2
 2. provide a default wrappers for common cases like `Indexed`, `Fallible`
 
-### break the chain
+## break the chain
 
 One of the coolest (keep in mind it was a late night one) ideas may be
 
@@ -91,9 +88,9 @@ One of the coolest (keep in mind it was a late night one) ideas may be
     Map(magicSeq, foo).Filter(bar).Slice()
 ```
 
-maybe too stupid and providing own function accepting the iter.Pull would be better.
+Implemented in break_da_chain example test in ideas_test.go.
 
-### Others
+## Others
 
  * which operations `it` should have?
  * unit tests for operations on a (hash)map
