@@ -36,10 +36,10 @@ func WithError[T any](seq iter.Seq[T]) iter.Seq2[T, error] {
 	return MapSeq2(seq, withErrorFunc[T, error])
 }
 
-func Example_idea_toseq2() {
+func Example_idea_toseq2_errors() {
 	n := []string{"forty-two", "42"}
 	s0 := it.From(n)
-	s1 := WithError(s0) // this step is probably unnecessary and MapSeq2 would be used here
+	s1 := WithError(s0) // TODO: this step is probably unnecessary and MapSeq2 would be used here
 	s2 := it.Map2(s1, func(s string, _ error) (int, error) { return strconv.Atoi(s) })
 
 	for value, error := range s2 {
@@ -48,7 +48,66 @@ func Example_idea_toseq2() {
 	// Output:
 	// 0 strconv.Atoi: parsing "forty-two": invalid syntax
 	// 42 <nil>
+}
 
+type index[T any, K int, V any] struct {
+	i       K
+	mapFunc func(T) V
+}
+
+func (i *index[T, K, V]) indexFunc(v T) (K, V) {
+	index := i.i
+	i.i++
+	return index, i.mapFunc(v)
+}
+
+func Example_idea_toseq2_index() {
+	// it can be done via MapSeq2 - however it is too cumbersome to be used - maybe providing an
+	// extra funtion will be better
+	n := []string{"forty-two", "42"}
+	indexer := index[string, int, string]{i: 0, mapFunc: func(s string) string { return s }}
+	s0 := it.From(n)
+	s1 := MapSeq2(s0, indexer.indexFunc)
+
+	for value, error := range s1 {
+		fmt.Println(value, error)
+	}
+	// Output:
+	// 0 forty-two
+	// 1 42
+}
+
+func Index[T any](seq iter.Seq[T], initial int) iter.Seq2[int, T] {
+	index := initial
+	return func(yield func(int, T) bool) {
+		next, stop := iter.Pull(seq)
+		defer stop()
+
+		for {
+			t, ok := next()
+			if !ok {
+				return
+			}
+			if !yield(index, t) {
+				return
+			}
+			index++
+		}
+	}
+}
+
+func Example_idea_toseq2_index2() {
+	n := []string{"forty-two", "42"}
+	s0 := it.From(n)
+	s1 := Index(s0, 0)
+	s2 := it.Filter2(s1, func(i int, s string) bool { return len(s) > 0 })
+
+	for index, value := range s2 {
+		fmt.Println(index, value)
+	}
+	// Output:
+	// 0 forty-two
+	// 1 42
 }
 
 func Example_idea_enumerable() {
@@ -70,7 +129,7 @@ func Example_idea_enumerable() {
 		idx++
 		return ret
 	}
-	res := it.NewMappable[string, Indexed[string]](it.From(n)).
+	res := it.NewMapable[string, Indexed[string]](it.From(n)).
 		Map(enumerable).
 		Filter(func(p Indexed[string]) bool { return p.index >= 2 }).
 		Slice()
@@ -126,15 +185,28 @@ func Example_idea_errors() {
 }
 
 type pusher struct {
-	stack []string
+	stack chan string
 }
 
 func (y *pusher) push(s string) {
-	y.stack = append(y.stack, s)
+	y.stack <- s
 }
 
 func (y pusher) seq() func(func(string) bool) {
-	return it.From[string](y.stack)
+	return func(yield func(string) bool) {
+		for {
+			select {
+			case s, open := <-y.stack:
+				if !open || !yield(s) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func (y pusher) wait() {
+	<-y.stack
 }
 
 func Example_break_da_chain() {
@@ -143,13 +215,17 @@ func Example_break_da_chain() {
 	chain := it.NewChain(it.From(n)).
 		Filter(func(s string) bool { return true })
 
-	p := pusher{}
-	for s := range chain.Seq() {
-		p.push(s)
-	}
+	p := pusher{stack: make(chan string)}
+	defer p.wait()
+	go func() {
+		defer close(p.stack)
+		for s := range chain.Seq() {
+			p.push(s)
+		}
+	}()
 
-	chain2 := it.NewChain[string](p.seq())
+	chain2 := it.NewChain(p.seq())
 	slice := chain2.Slice()
 	fmt.Println(slice)
-	// Output: []
+	// Output: [aa aaa aaaaaaa a]
 }

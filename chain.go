@@ -28,36 +28,35 @@ func (g Chain[T]) Slice() []T {
 	return Slice(g.seq)
 }
 
-// Mappable allows the operations to be chained via method calls and
+// Mapable allows the operations to be chained via method calls and
 // additionally T -> V and V -> T mapping can be added
-// XXX: naming - the 2 suffix leads one to think this does work with maps :shrug:
-type Mappable[T, V any] struct {
+type Mapable[T, V any] struct {
 	seq  iter.Seq[T]
 	none V
 }
 
-func NewMappable[T, V any](seq iter.Seq[T]) Mappable[T, V] {
-	return Mappable[T, V]{
+func NewMapable[T, V any](seq iter.Seq[T]) Mapable[T, V] {
+	return Mapable[T, V]{
 		seq: seq,
 	}
 }
 
-func (g Mappable[T, V]) Filter(filterFunc FilterFunc[T]) Mappable[T, V] {
-	return Mappable[T, V]{
+func (g Mapable[T, V]) Filter(filterFunc FilterFunc[T]) Mapable[T, V] {
+	return Mapable[T, V]{
 		seq: Filter(g.seq, filterFunc),
 	}
 }
 
-func (g Mappable[T, V]) Map(mapFunc MapFunc[T, V]) Mappable[V, T] {
-	return Mappable[V, T]{
+func (g Mapable[T, V]) Map(mapFunc MapFunc[T, V]) Mapable[V, T] {
+	return Mapable[V, T]{
 		seq: Map(g.seq, mapFunc),
 	}
 }
 
-func (g Mappable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
+func (g Mapable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
 	return Reduce(g.seq, reduceFunc, initial)
 }
 
-func (g Mappable[T, V]) Slice() []T {
+func (g Mapable[T, V]) Slice() []T {
 	return Slice(g.seq)
 }

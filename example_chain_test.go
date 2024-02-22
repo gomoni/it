@@ -25,10 +25,10 @@ func ExampleChain_Reduce() {
 	// Output: 7
 }
 
-func ExampleMappable_Map() {
+func ExampleMapable_Map() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int
-	res := it.NewMappable[string, int](it.From(n)).
+	res := it.NewMapable[string, int](it.From(n)).
 		Map(func(s string) int { return len(s) }).
 		Filter(func(i int) bool { return i >= 2 }).
 		Slice()
@@ -36,10 +36,10 @@ func ExampleMappable_Map() {
 	// Output: [2 3 7]
 }
 
-func ExampleMappable_Map_second() {
+func ExampleMapable_Map_second() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int and int->string
-	res := it.NewMappable[string, int](it.From(n)).
+	res := it.NewMapable[string, int](it.From(n)).
 		Map(func(s string) int { return len(s) }).
 		Filter(func(i int) bool { return i >= 2 }).
 		Map(func(i int) string { return "string(" + strconv.Itoa(i) + ")" }).
