@@ -33,6 +33,16 @@ func SimpleFilter[T any](slice []T, filterFunc FilterFunc[T]) []T {
     return Slice(fseq)
 }
 
+// SimpleFilters is a simple wrapper over several consecutive Filter operations ona slice []T.
+func SimpleFilters[T any](slice []T, filterFuncs ...FilterFunc[T]) []T {
+    var rv []T
+    rv = slice
+    for _, filterFunc := range filterFuncs {
+        rv = SimpleFilter(rv, filterFunc)
+    }
+    return rv
+}
+
 // Filter yields only values for which filterFunc returns true
 func Filter[T any](s iter.Seq[T], filterFunc FilterFunc[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {
