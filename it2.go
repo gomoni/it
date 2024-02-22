@@ -2,7 +2,6 @@ package it
 
 import (
 	"iter"
-	"slices"
 )
 
 // Map2Func maps the K, V -> K2, V2
@@ -93,9 +92,7 @@ func Values[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 	}
 }
 
-type SortFunc[K any] func(K, K) int
-
-func Sorted2[K comparable, V any](seq iter.Seq2[K, V], less SortFunc[K]) iter.Seq2[K, V] {
+func Sort2[K comparable, V any](seq iter.Seq2[K, V], sortFunc SortFunc[K]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 
 		m := AsMap(seq)
@@ -105,7 +102,7 @@ func Sorted2[K comparable, V any](seq iter.Seq2[K, V], less SortFunc[K]) iter.Se
 			keys[idx] = k
 			idx++
 		}
-		slices.SortFunc(keys, less)
+		sortFunc(keys)
 
 		for idx := range len(m) {
 			k := keys[idx]

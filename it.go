@@ -2,7 +2,6 @@ package it
 
 import (
 	"iter"
-	"slices"
 )
 
 // FilterFunc is a predicate for type T
@@ -13,6 +12,9 @@ type MapFunc[T, V any] func(T) V
 
 // Reduce func combines two arguments into one
 type ReduceFunc[T any] func(T, T) T
+
+// Sort func sorts the given slice
+type SortFunc[T any] func([]T)
 
 // From converts the slice into iter.Seq
 // TODO: better names like FromSlice, FromMap, FromChannel?
@@ -92,9 +94,9 @@ func Reverse[T any](s iter.Seq[T]) iter.Seq[T] {
 	}
 }
 
-func Sorted[T any](s iter.Seq[T], sortFunc SortFunc[T]) iter.Seq[T] {
+func Sort[T any](s iter.Seq[T], sortFunc SortFunc[T]) iter.Seq[T] {
 	slice := Slice(s)
-	slices.SortFunc(slice, sortFunc)
+	sortFunc(slice)
 	return From(slice)
 }
 

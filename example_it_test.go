@@ -2,6 +2,7 @@ package it_test
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -29,10 +30,10 @@ func ExampleMap() {
 	// Output: [2.0000E+00 3.0000E+00 7.0000E+00 1.0000E+00]
 }
 
-func ExampleSorted() {
+func ExampleSort() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	s0 := it.From(n)
-	s1 := it.Sorted(s0, strings.Compare)
+	s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
 	slice := it.Slice(s1)
 	fmt.Println(slice)
 	// Output: [a aa aaa aaaaaaa]
@@ -41,7 +42,7 @@ func ExampleSorted() {
 func ExampleReverse() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	s0 := it.From(n)
-	s1 := it.Sorted(s0, strings.Compare)
+	s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
 	s2 := it.Reverse(s1)
 	slice := it.Slice(s2)
 	fmt.Println(slice)
