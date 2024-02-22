@@ -70,7 +70,7 @@ func Example_idea_enumerable() {
 		idx++
 		return ret
 	}
-	res := it.NewMappableChain[string, Indexed[string]](it.From(n)).
+	res := it.NewMappable[string, Indexed[string]](it.From(n)).
 		Map(enumerable).
 		Filter(func(p Indexed[string]) bool { return p.index >= 2 }).
 		Slice()
