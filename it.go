@@ -26,6 +26,13 @@ func From[T any](slice []T) iter.Seq[T] {
 	}
 }
 
+// SimpleFilter is a simple wrapper of one Filter operation on a slice []T.
+func SimpleFilter[T any](slice []T, filterFunc FilterFunc[T]) []T {
+    oseq := From(slice)
+    fseq := Filter(oseq, filterFunc)
+    return Slice(fseq)
+}
+
 // Filter yields only values for which filterFunc returns true
 func Filter[T any](s iter.Seq[T], filterFunc FilterFunc[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {
