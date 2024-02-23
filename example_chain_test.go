@@ -17,12 +17,35 @@ func ExampleChain_Filter() {
 	// Output: [aaa aaaaaaa]
 }
 
+func ExampleChain_Index() {
+	n := []string{"aa", "aaa", "aaaaaaa", "a"}
+	res := it.NewChain(it.From(n)).
+		Index().
+		Filter2(func(index int, _ string) bool { return index <= 1 }).
+		Values().
+		Slice()
+	fmt.Println(res)
+	// Output: [aa aaa]
+}
+
 func ExampleChain_Reduce() {
 	m := []int{1, 2, 3, 4, 5, 6, 7}
 	count := it.NewChain(it.From(m)).
 		Reduce(func(a, _ int) int { return a + 1 }, 0)
 	fmt.Println(count)
 	// Output: 7
+}
+
+func ExampleMapable_Index() {
+	n := []string{"aa", "aaa", "aaaaaaa", "a"}
+	res := it.NewMapable[string, int](it.From(n)).
+		Map(func(s string) int { return len(s) }).
+		Index().
+		Filter2(func(index int, _ int) bool { return index <= 1 }).
+		Values().
+		Slice()
+	fmt.Println(res)
+	// Output: [2 3]
 }
 
 func ExampleMapable_Map() {

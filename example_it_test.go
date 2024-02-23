@@ -18,6 +18,32 @@ func ExampleFilter() {
 	// Output: [aa aaa aaaaaaa]
 }
 
+func ExampleIndexFrom() {
+	n := []string{"aa", "aaa", "aaaaaaa", "a"}
+	s0 := it.From(n)
+	for index, value := range it.IndexFrom(s0, 42) {
+		fmt.Println(index, value)
+	}
+	// Output:
+	// 42 aa
+	// 43 aaa
+	// 44 aaaaaaa
+	// 45 a
+}
+
+func ExampleIndex() {
+	n := []string{"aa", "aaa", "aaaaaaa", "a"}
+	s0 := it.From(n)
+	for index, value := range it.Index(s0) {
+		fmt.Println(index, value)
+	}
+	// Output:
+	// 0 aa
+	// 1 aaa
+	// 2 aaaaaaa
+	// 3 a
+}
+
 func ExampleMap() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int->float32

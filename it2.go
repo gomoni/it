@@ -20,7 +20,7 @@ func From2[K comparable, V any](m map[K]V) iter.Seq2[K, V] {
 	}
 }
 
-func Filter2[K comparable, V any](seq iter.Seq2[K, V], filterFunc Filter2Func[K, V]) iter.Seq2[K, V] {
+func Filter2[K, V any](seq iter.Seq2[K, V], filterFunc Filter2Func[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		next, stop := iter.Pull2(seq)
 		defer stop()
@@ -58,7 +58,7 @@ func Map2[K, V, K2, V2 any](seq iter.Seq2[K, V], mapFunc Map2Func[K, V, K2, V2])
 	}
 }
 
-func Keys[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
+func Keys[K any, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {
 		next, stop := iter.Pull2(seq)
 		defer stop()
@@ -75,7 +75,7 @@ func Keys[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	}
 }
 
-func Values[K comparable, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
+func Values[K any, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
 		next, stop := iter.Pull2(seq)
 		defer stop()

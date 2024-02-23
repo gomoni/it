@@ -49,6 +49,35 @@ func Filter[T any](s iter.Seq[T], filterFunc FilterFunc[T]) iter.Seq[T] {
 	}
 }
 
+// IndexFrom returns sequence returning two values index, T starting from initial.
+// This is compatible with a standard  range over a slice
+//
+//	for index, value := range IndexFrom(sequence, 42) {}
+func IndexFrom[T any](seq iter.Seq[T], initial int) iter.Seq2[int, T] {
+	index := initial
+	return func(yield func(int, T) bool) {
+		next, stop := iter.Pull(seq)
+		defer stop()
+
+		for {
+			t, ok := next()
+			if !ok {
+				return
+			}
+			if !yield(index, t) {
+				return
+			}
+			index++
+		}
+	}
+}
+
+// Index returns sequence returning two values index, T starting from zero.
+// See IndexFrom for details
+func Index[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
+	return IndexFrom(seq, 0)
+}
+
 // Map calls a mapping function on each member of the sequence
 func Map[T, V any](s iter.Seq[T], mapFunc MapFunc[T, V]) iter.Seq[V] {
 	return func(yield func(V) bool) {

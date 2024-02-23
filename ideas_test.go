@@ -77,29 +77,10 @@ func Example_idea_toseq2_index() {
 	// 1 42
 }
 
-func Index[T any](seq iter.Seq[T], initial int) iter.Seq2[int, T] {
-	index := initial
-	return func(yield func(int, T) bool) {
-		next, stop := iter.Pull(seq)
-		defer stop()
-
-		for {
-			t, ok := next()
-			if !ok {
-				return
-			}
-			if !yield(index, t) {
-				return
-			}
-			index++
-		}
-	}
-}
-
 func Example_idea_toseq2_index2() {
 	n := []string{"forty-two", "42"}
 	s0 := it.From(n)
-	s1 := Index(s0, 0)
+	s1 := it.Index(s0)
 	s2 := it.Filter2(s1, func(i int, s string) bool { return len(s) > 0 })
 
 	for index, value := range s2 {
