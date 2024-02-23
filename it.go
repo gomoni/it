@@ -16,6 +16,12 @@ type ReduceFunc[T any] func(T, T) T
 // Sort func sorts the given slice
 type SortFunc[T any] func([]T)
 
+// MapSeq2Func allows a mapping of single T into two other types
+// A typical example is to return a T with an error in case mapping fails
+type MapSeq2Func[T, K, V any] func(T) (K, V)
+
+type MapErrorFunc[T, V any] func(T) (V, error)
+
 // From converts the slice into iter.Seq
 // TODO: better names like FromSlice, FromMap, FromChannel?
 func From[T any](slice []T) iter.Seq[T] {
@@ -95,6 +101,36 @@ func Map[T, V any](s iter.Seq[T], mapFunc MapFunc[T, V]) iter.Seq[V] {
 			}
 		}
 	}
+}
+
+// MapSeq2 maps the single value of type T into a sequence of two values of types K, V
+// and a typical use is return a mapped type together with an error
+func MapSeq2[T, K, V any](seq iter.Seq[T], mapFunc MapSeq2Func[T, K, V]) iter.Seq2[K, V] {
+	return func(yield func(K, V) bool) {
+		next, stop := iter.Pull(seq)
+		defer stop()
+
+		for {
+			t, ok := next()
+			if !ok {
+				return
+			}
+			k, v := mapFunc(t)
+			if !yield(k, v) {
+				return
+			}
+		}
+	}
+}
+
+func mapErrorFunc[T, K any](mapFunc MapErrorFunc[T, K]) MapSeq2Func[T, K, error] {
+	return func(value T) (K, error) {
+		return mapFunc(value)
+	}
+}
+
+func MapError[T, V any](seq iter.Seq[T], mapFunc MapErrorFunc[T, V]) iter.Seq2[V, error] {
+	return MapSeq2[T, V, error](seq, mapErrorFunc(mapFunc))
 }
 
 func Reduce[T any](s iter.Seq[T], reduceFunc ReduceFunc[T], initial T) T {

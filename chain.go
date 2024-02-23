@@ -61,6 +61,17 @@ func (g Mapable[T, V]) Map(mapFunc MapFunc[T, V]) Mapable[V, T] {
 	}
 }
 
+// FIXME: this is not possible - the V must be comparable, which is too much of a constraint
+// maybe split types to Mapable2[T comparable, V any] with AsMap() helper
+// and Chains[T any, V any] without such method
+// dunno
+
+/*
+func (g Mapable[T, V]) MapError(mapFunc MapErrorFunc[T, V]) Chain2[V, error] {
+	return Chain2[V, error]{seq: MapError(g.seq, mapFunc)}
+}
+*/
+
 func (g Mapable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
 	return Reduce(g.seq, reduceFunc, initial)
 }

@@ -56,6 +56,30 @@ func ExampleMap() {
 	// Output: [2.0000E+00 3.0000E+00 7.0000E+00 1.0000E+00]
 }
 
+func ExampleMapSeq2() {
+	n := []string{"forty-two", "42"}
+	s0 := it.From(n)
+	s1 := it.MapSeq2(s0, func(s string) (int, error) { return strconv.Atoi(s) })
+	for value, error := range s1 {
+		fmt.Println(value, error)
+	}
+	// Output:
+	// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+	// 42 <nil>
+}
+
+func ExampleMapError() {
+	n := []string{"forty-two", "42"}
+	s0 := it.From(n)
+	s1 := it.MapError(s0, strconv.Atoi)
+	for value, error := range s1 {
+		fmt.Println(value, error)
+	}
+	// Output:
+	// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+	// 42 <nil>
+}
+
 func ExampleSort() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	s0 := it.From(n)
