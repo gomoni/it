@@ -31,17 +31,7 @@ which covers more use cases. However method chains makes a better sales pitch
 This example maps a slice to strings to int, add an index so only first two
 items are returned and convert the code back to slice of ints.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-res := it.NewMapable[string, int](it.From(n)).
-	Map(func(s string) int { return len(s) }).
-	Index().
-	Filter2(func(index int, _ int) bool { return index <= 1 }).
-	Values().
-	Slice()
-fmt.Println(res)
-// Output: [2 3]
-```
+{{ "ExampleMapable_Index" | example }}
 
 # Examples
 
@@ -52,24 +42,9 @@ Everything is available as a plain function. Some helpers are exposed via
 operations together. However this is more or less a syntax sugar on top regular
 functions and explicit passing of variables.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-res := it.NewChain(it.From(n)).
-	Filter(func(s string) bool { return len(s) >= 2 }).
-	Filter(func(s string) bool { return len(s) >= 3 }).
-	Slice()
-fmt.Println(res)
-// Output: [aaa aaaaaaa]
-```
+{{ "ExampleChain_Filter" | example }}
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
-s1 := it.Filter(s0, func(s string) bool { return len(s) >= 2 })
-slice := it.Slice(s1)
-fmt.Println(slice)
-// Output: [aa aaa aaaaaaa]
-```
+{{ "ExampleFilter" | example }}
 
 ## Indexing
 
@@ -81,34 +56,14 @@ for index, value := range slice {}
 
 `it` does implement the `Index`/`IndexFrom` functions, which allows exactly that.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
-for index, value := range it.Index(s0) {
-	fmt.Println(index, value)
-}
-// Output:
-// 0 aa
-// 1 aaa
-// 2 aaaaaaa
-// 3 a
-```
+{{ "ExampleIndex" | example }}
 
 The way how this is implemented is it changes `iter.Seq[T]` into
 `iter.Seq2[int, T]`. That has some consequences for a chain as the `Chain2`
 struct is returned and `Filter2` method working on a pair must be called and
 later `Values()` dropping the index from the sequence.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-res := it.NewChain(it.From(n)).
-	Index().
-	Filter2(func(index int, _ string) bool { return index <= 1 }).
-	Values().
-	Slice()
-fmt.Println(res)
-// Output: [aa aaa]
-```
+{{ "ExampleChain_Index" | example }}
 
 ## Map
 
@@ -116,78 +71,36 @@ Map transforms one type to another. This was challenging to support in method
 chaininig as Go type system don't allow to specify types of struct methods.
 However it works for a common case mapping two types.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-// maps string->int and int->string
-res := it.NewMapable[string, int](it.From(n)).
-	Map(func(s string) int { return len(s) }).
-	Filter(func(i int) bool { return i >= 2 }).
-	Map(func(i int) string { return "string(" + strconv.Itoa(i) + ")" }).
-	Slice()
-fmt.Println(res)
-// Output: [string(2) string(3) string(7)]
-```
+{{ "ExampleMapable_Map_second" | example }}
 
 Supporting more than two types will lead to very messy API, however it is Go.
 Old plain functions are always theanswer.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-// maps string->int->float32
-s0 := it.From(n)
-s1 := it.Map(s0, func(s string) int { return len(s) })
-s2 := it.Map(s1, func(i int) float32 { return float32(i) })
-s3 := it.Map(s2, func(f float32) string { return strconv.FormatFloat(float64(f), 'E', 4, 32) })
-slice := it.Slice(s3)
-fmt.Println(slice)
-// Output: [2.0000E+00 3.0000E+00 7.0000E+00 1.0000E+00]
-```
+{{ "ExampleMap" | example }}
 
 ## Reduce
 
 Reduce is a common functional operation, except it returns a single value. It
 allows one to implement operation len.
 
-```go
-m := []int{1, 2, 3, 4, 5, 6, 7}
-count := it.NewChain(it.From(m)).
-	Reduce(func(a, _ int) int { return a + 1 }, 0)
-fmt.Println(count)
-// Output: 7
-```
+{{ "ExampleChain_Reduce" | example }}
 
 ## Sort
 
-Sort is a specific operation as it must break the chain. All other operations
-can work on a single item at the time. Not sort - it first pull all items to
-slice, sort it and then push the values to the iterator.
+All other operations can work on a single item at the time. Not sort - it first
+pull all items to slice, sort it and then push the values to the iterator.
 
 It accepts `type SortFunc[T any] func([]T)`, so caller can specify exactly
 _how_ the sequence is going to be sorted. For example use a
 `slices.SortStableFunc` to get a stable sort.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
-s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
-slice := it.Slice(s1)
-fmt.Println(slice)
-// Output: [a aa aaa aaaaaaa]
-```
+{{ "ExampleSort" | example }}
 
 ## Reverse
 
 Simply iterate backward - it must collect the slice first.
 
-```go
-n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
-s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
-s2 := it.Reverse(s1)
-slice := it.Slice(s2)
-fmt.Println(slice)
-// Output: [aaaaaaa aaa aa a]
-```
+{{ "ExampleReverse" | example }}
 
 ## iter.Seq2[K, V]
 
@@ -198,101 +111,28 @@ it is clear if method works with a single value or a pair.
 Filtering - as the range order of iter.Seq2 is random in Go, the sequence must
 be sorted first.
 
-```go
-m := map[string]int{"one": 0, "two": 1, "three": 2}
+{{ "ExampleFilter2" | example }}
 
-s0 := it.From2(m)
-s1 := it.Filter2(s0, func(k string, v int) bool { return v >= 1 })
-s2 := it.Sort2(s1, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
-for k, v := range s2 {
-	fmt.Println(k, v)
-}
-// Output:
-// three 2
-// two 1
-```
-
-```go
-m := map[string]int{"one": 0, "two": 1, "three": 2}
-
-s0 := it.From2(m)
-s1 := it.Map2(s0, func(k string, v int) (int, string) { return v, k })
-s2 := it.Sort2(s1, slices.Sort)
-for k, v := range s2 {
-	fmt.Println(k, v)
-}
-// Output:
-// 0 one
-// 1 two
-// 2 three
-```
+{{ "ExampleMap2" | example }}
 
 Sometimes one needs to pick only one of `K`, `V`, so `Keys` and `Values` does not have `2` suffix.
 
-```go
-m := map[string]int{"one": 0, "two": 1, "three": 2}
+{{ "ExampleKeys" | example }}
 
-s0 := it.From2(m)
-s1 := it.Keys(s0)
-s2 := it.Sort(s1, slices.Sort)
-for s := range s2 {
-	fmt.Println(s)
-}
-// Output:
-// one
-// three
-// two
-```
-
-```go
-m := map[string]int{"one": 0, "two": 1, "three": 2}
-
-s0 := it.From2(m)
-s1 := it.Values(s0)
-s2 := it.Sort(s1, slices.Sort)
-for n := range s2 {
-	fmt.Println(n)
-}
-// Output:
-// 0
-// 1
-// 2
-```
+{{ "ExampleValues" | example }}
 
 And one can get values back as a map - note the `K` must be `comparable`
 otherwise type system does not allow one to construct a map.
 
 > invalid map key type K (missing comparable constraint)
 
-```go
-m := map[string]int{"one": 0, "two": 1, "three": 2}
-
-s0 := it.From2(m)
-s1 := it.Filter2(s0, func(_ string, v int) bool { return v == 2 })
-m2 := it.AsMap(s1)
-for k, v := range m2 {
-	fmt.Println(k, v)
-}
-// Output:
-// three 2
-```
+{{ "ExampleAsMap" | example }}
 
 ## Chain2
 
 All operations above can get chained. The only limitation is `K` must be `comparable`.
 
-```go
-m := map[string]int{"one": 0, "two": 1, "three": 2}
-
-m2 := it.NewChain2(it.From2(m)).
-	Filter2(func(_ string, v int) bool { return v == 2 }).
-	AsMap()
-for k, v := range m2 {
-	fmt.Println(k, v)
-}
-// Output:
-// three 2
-```
+{{ "ExampleChain2" | example }}
 
 # WIP
 
