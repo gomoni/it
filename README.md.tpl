@@ -19,7 +19,7 @@ Non goals
 > easily implemented via provided primitives.
 
 IOW do not overwhelm users by all the functions it is possible to implement. Focus on
-a real cases, which can't be easily built using primitives.
+a real cases, which can't be easily built using provided primitives.
 
 # Usage
 
@@ -37,7 +37,7 @@ items are returned and convert the code back to slice of ints.
 
 ## Filtering
 
-Everything is available as a plain function. Some helpers are exposed via
+Everything is available as a plain function. Most of the helpers are exposed via
 `Chain` and `Mapable` structs methods allowing one to chain different
 operations together. However this is more or less a syntax sugar on top regular
 functions and explicit passing of variables.
@@ -179,15 +179,13 @@ Implemented in break_da_chain example test in ideas_test.go.
 ## Others
 
  * which operations `it` should have?
- * unit tests for operations on a (hash)map
- * what about operations which drains the input sequence? eg Keys?
- * naming and code organization - ie keep everything in a single `it` package and adopt `Seq` vs `Seq2` naming of a stdlib or move seq2 implementation into own package
- * make it context aware?????
-
+ * make them context aware?????
 
 # Other libraries
 
-## https://pkg.go.dev/github.com/samber/lo
+## lo
+
+https://pkg.go.dev/github.com/samber/lo
 
 Is the most used lodash-style library for Go.
 
@@ -211,10 +209,12 @@ An example is `FilterMap` function. It can be implemented as `Filter` and
 https://pkg.go.dev/github.com/samber/lo#pkg-functions
 
 
-## https://github.com/novalagung/gubrak
+## gubrak
 
-Less popular, provides nicer API than lo. Implements own iterator type, so
-methods can be arbitrary chained.
+https://github.com/novalagung/gubrak
+
+Less popular, provides nicer looking API than lo. Implements own iterator type,
+so methods can be arbitrary chained. Harder to use due prevalent `interface{}` usage.
 
 Pros
 
@@ -232,3 +232,10 @@ Cons
  * https://docs.python.org/3/library/itertools.html
  * https://doc.rust-lang.org/book/ch13-02-iterators.html
  * https://hackage.haskell.org/package/base-4.19.0.0/docs/Data-List.html#g:2
+
+Documentation generated using https://github.com/dave/rebecca
+
+```
+go install github.com/dave/rebecca/cmd/becca@latest
+becca -package github.com/gomoni/it
+```
