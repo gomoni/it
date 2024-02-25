@@ -7,10 +7,10 @@ import (
 // Map2Func maps the K, V -> K2, V2
 type Map2Func[K, V, K2, V2 any] func(K, V) (K2, V2)
 
-// Filter2Func is a predicate for type T
+// Filter2Func is a predicate for type K, V
 type Filter2Func[K, V any] func(K, V) bool
 
-func From2[K comparable, V any](m map[K]V) iter.Seq2[K, V] {
+func From2Slice[K comparable, V any](m map[K]V) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
 		for k, v := range m {
 			if !yield(k, v) {

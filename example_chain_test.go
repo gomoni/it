@@ -9,7 +9,7 @@ import (
 
 func ExampleChain_Filter() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
-	res := it.NewChain(it.From(n)).
+	res := it.NewChain(it.FromSlice(n)).
 		Filter(func(s string) bool { return len(s) >= 2 }).
 		Filter(func(s string) bool { return len(s) >= 3 }).
 		Slice()
@@ -19,7 +19,7 @@ func ExampleChain_Filter() {
 
 func ExampleChain_Index() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
-	res := it.NewChain(it.From(n)).
+	res := it.NewChain(it.FromSlice(n)).
 		Index().
 		Filter2(func(index int, _ string) bool { return index <= 1 }).
 		Values().
@@ -30,7 +30,7 @@ func ExampleChain_Index() {
 
 func ExampleChain_Reduce() {
 	m := []int{1, 2, 3, 4, 5, 6, 7}
-	count := it.NewChain(it.From(m)).
+	count := it.NewChain(it.FromSlice(m)).
 		Reduce(func(a, _ int) int { return a + 1 }, 0)
 	fmt.Println(count)
 	// Output: 7
@@ -38,7 +38,7 @@ func ExampleChain_Reduce() {
 
 func Example_readme_chain() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
-	slice := it.NewMapable[string, int](it.From(n)).
+	slice := it.NewMapable[string, int](it.FromSlice(n)).
 		Map(func(s string) int { return len(s) }).
 		Index().
 		Filter2(func(index int, _ int) bool { return index <= 1 }).
@@ -50,12 +50,12 @@ func Example_readme_chain() {
 
 func Example_readme_plain() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
-	seq0 := it.From(n)
+	seq0 := it.FromSlice(n)
 	seq1 := it.Map(seq0, func(s string) int { return len(s) })
 	seq2 := it.Index(seq1)
 	seq3 := it.Filter2(seq2, func(index int, _ int) bool { return index <= 1 })
 	seq4 := it.Values(seq3)
-	slice := it.Slice(seq4)
+	slice := it.AsSlice(seq4)
 	fmt.Println(slice)
 	// Output: [2 3]
 }
@@ -63,7 +63,7 @@ func Example_readme_plain() {
 func ExampleMapable_Map() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int
-	res := it.NewMapable[string, int](it.From(n)).
+	res := it.NewMapable[string, int](it.FromSlice(n)).
 		Map(func(s string) int { return len(s) }).
 		Filter(func(i int) bool { return i >= 2 }).
 		Slice()
@@ -73,7 +73,7 @@ func ExampleMapable_Map() {
 
 func ExampleMapable_MapError() {
 	n := []string{"forty-two", "42"}
-	c := it.NewMapable[string, int](it.From(n)).
+	c := it.NewMapable[string, int](it.FromSlice(n)).
 		MapError(strconv.Atoi)
 	for value, error := range c.Seq2() {
 		fmt.Println(value, error)
@@ -86,7 +86,7 @@ func ExampleMapable_MapError() {
 func ExampleMapable_Map_second() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int and int->string
-	res := it.NewMapable[string, int](it.From(n)).
+	res := it.NewMapable[string, int](it.FromSlice(n)).
 		Map(func(s string) int { return len(s) }).
 		Filter(func(i int) bool { return i >= 2 }).
 		Map(func(i int) string { return "string(" + strconv.Itoa(i) + ")" }).

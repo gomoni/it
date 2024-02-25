@@ -11,7 +11,7 @@ import (
 func ExampleFilter2() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	s0 := it.From2(m)
+	s0 := it.From2Slice(m)
 	s1 := it.Filter2(s0, func(k string, v int) bool { return v >= 1 })
 	s2 := it.Sort2(s1, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
 	for k, v := range s2 {
@@ -25,7 +25,7 @@ func ExampleFilter2() {
 func ExampleMap2() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	s0 := it.From2(m)
+	s0 := it.From2Slice(m)
 	s1 := it.Map2(s0, func(k string, v int) (int, string) { return v, k })
 	s2 := it.Sort2(s1, slices.Sort)
 	for k, v := range s2 {
@@ -40,7 +40,7 @@ func ExampleMap2() {
 func ExampleKeys() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	s0 := it.From2(m)
+	s0 := it.From2Slice(m)
 	s1 := it.Keys(s0)
 	s2 := it.Sort(s1, slices.Sort)
 	for s := range s2 {
@@ -55,7 +55,7 @@ func ExampleKeys() {
 func ExampleValues() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	s0 := it.From2(m)
+	s0 := it.From2Slice(m)
 	s1 := it.Values(s0)
 	s2 := it.Sort(s1, slices.Sort)
 	for n := range s2 {
@@ -70,7 +70,7 @@ func ExampleValues() {
 func ExampleAsMap() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	s0 := it.From2(m)
+	s0 := it.From2Slice(m)
 	s1 := it.Filter2(s0, func(_ string, v int) bool { return v == 2 })
 	m2 := it.AsMap(s1)
 	for k, v := range m2 {
@@ -83,7 +83,7 @@ func ExampleAsMap() {
 func ExampleChain2() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	chain2 := it.NewChain2(it.From2(m)).
+	chain2 := it.NewChain2(it.From2Slice(m)).
 		Filter2(func(_ string, v int) bool { return v == 2 })
 	for k, v := range chain2.Seq2() {
 		fmt.Println(k, v)

@@ -22,9 +22,8 @@ type MapSeq2Func[T, K, V any] func(T) (K, V)
 
 type MapErrorFunc[T, V any] func(T) (V, error)
 
-// From converts the slice into iter.Seq
-// TODO: better names like FromSlice, FromMap, FromChannel?
-func From[T any](slice []T) iter.Seq[T] {
+// FromSlice converts the slice into iter.Seq
+func FromSlice[T any](slice []T) iter.Seq[T] {
 	return func(yield func(T) bool) {
 		for _, i := range slice {
 			if !yield(i) {
@@ -148,7 +147,7 @@ func Reduce[T any](s iter.Seq[T], reduceFunc ReduceFunc[T], initial T) T {
 }
 
 func Reverse[T any](s iter.Seq[T]) iter.Seq[T] {
-	slice := Slice(s)
+	slice := AsSlice(s)
 
 	return func(yield func(T) bool) {
 		for idx := len(slice) - 1; idx != -1; idx-- {
@@ -160,15 +159,15 @@ func Reverse[T any](s iter.Seq[T]) iter.Seq[T] {
 }
 
 func Sort[T any](s iter.Seq[T], sortFunc SortFunc[T]) iter.Seq[T] {
-	slice := Slice(s)
+	slice := AsSlice(s)
 	sortFunc(slice)
-	return From(slice)
+	return FromSlice(slice)
 }
 
-// Slice converts the sequence into slice
+// AsSlice converts the sequence into slice
 // TODO: rename to AsSlice like AsMap?
 // TODO: provide IntoScile(slice []T, seq iter.Seq[T])?
-func Slice[T any](seq iter.Seq[T]) []T {
+func AsSlice[T any](seq iter.Seq[T]) []T {
 	ret := make([]T, 0, 1024)
 	next, stop := iter.Pull(seq)
 	defer stop()

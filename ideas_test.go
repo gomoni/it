@@ -35,7 +35,7 @@ func Example_break_da_chain() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 
 	// create a method chain
-	chain := it.NewChain(it.From(n)).
+	chain := it.NewChain(it.FromSlice(n)).
 		Filter(func(s string) bool { return true })
 
 	// break it - with some syntax sugar

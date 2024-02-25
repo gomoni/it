@@ -29,7 +29,7 @@ func (g Chain[T]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
 }
 
 func (g Chain[T]) Slice() []T {
-	return Slice(g.seq)
+	return AsSlice(g.seq)
 }
 
 // Mapable allows the operations to be chained via method calls and
@@ -70,5 +70,5 @@ func (g Mapable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
 }
 
 func (g Mapable[T, V]) Slice() []T {
-	return Slice(g.seq)
+	return AsSlice(g.seq)
 }

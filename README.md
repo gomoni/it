@@ -29,7 +29,7 @@ case to developers.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-slice := it.NewMapable[string, int](it.From(n)).
+slice := it.NewMapable[string, int](it.FromSlice(n)).
 	Map(func(s string) int { return len(s) }).
 	Index().
 	Filter2(func(index int, _ int) bool { return index <= 1 }).
@@ -45,12 +45,12 @@ developer in this form too.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-seq0 := it.From(n)
+seq0 := it.FromSlice(n)
 seq1 := it.Map(seq0, func(s string) int { return len(s) })
 seq2 := it.Index(seq1)
 seq3 := it.Filter2(seq2, func(index int, _ int) bool { return index <= 1 })
 seq4 := it.Values(seq3)
-slice := it.Slice(seq4)
+slice := it.AsSlice(seq4)
 fmt.Println(slice)
 // Output: [2 3]
 ```
@@ -63,7 +63,7 @@ In order to limit the sequence, use a `Filter`.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-res := it.NewChain(it.From(n)).
+res := it.NewChain(it.FromSlice(n)).
 	Filter(func(s string) bool { return len(s) >= 2 }).
 	Filter(func(s string) bool { return len(s) >= 3 }).
 	Slice()
@@ -73,9 +73,9 @@ fmt.Println(res)
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.Filter(s0, func(s string) bool { return len(s) >= 2 })
-slice := it.Slice(s1)
+slice := it.AsSlice(s1)
 fmt.Println(slice)
 // Output: [aa aaa aaaaaaa]
 ```
@@ -92,7 +92,7 @@ The `it` does implement the `Index`/`IndexFrom` functions, which adds the index 
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 for index, value := range it.Index(s0) {
 	fmt.Println(index, value)
 }
@@ -109,7 +109,7 @@ example. The `Values` functions returns the second value later on.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-res := it.NewChain(it.From(n)).
+res := it.NewChain(it.FromSlice(n)).
 	Index().
 	Filter2(func(index int, _ string) bool { return index <= 1 }).
 	Values().
@@ -127,7 +127,7 @@ use a `Map` in a method chain.
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
 // maps string->int and int->string
-res := it.NewMapable[string, int](it.From(n)).
+res := it.NewMapable[string, int](it.FromSlice(n)).
 	Map(func(s string) int { return len(s) }).
 	Filter(func(i int) bool { return i >= 2 }).
 	Map(func(i int) string { return "string(" + strconv.Itoa(i) + ")" }).
@@ -146,11 +146,11 @@ However good old functions have no such limitation and can be used instead.
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
 // maps string->int->float32
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.Map(s0, func(s string) int { return len(s) })
 s2 := it.Map(s1, func(i int) float32 { return float32(i) })
 s3 := it.Map(s2, func(f float32) string { return strconv.FormatFloat(float64(f), 'E', 4, 32) })
-slice := it.Slice(s3)
+slice := it.AsSlice(s3)
 fmt.Println(slice)
 // Output: [2.0000E+00 3.0000E+00 7.0000E+00 1.0000E+00]
 ```
@@ -164,7 +164,7 @@ can fail. The `it` provides a mapping function from `iter.Seq[T]` into
 
 ```go
 n := []string{"forty-two", "42"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.MapSeq2(s0, strconv.Atoi)
 for value, error := range s1 {
 	fmt.Println(value, error)
@@ -179,7 +179,7 @@ exists as an exception to the permutation rule above.
 
 ```go
 n := []string{"forty-two", "42"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.MapError(s0, strconv.Atoi)
 for value, error := range s1 {
 	fmt.Println(value, error)
@@ -193,7 +193,7 @@ And can be done inside a method chain too.
 
 ```go
 n := []string{"forty-two", "42"}
-c := it.NewMapable[string, int](it.From(n)).
+c := it.NewMapable[string, int](it.FromSlice(n)).
 	MapError(strconv.Atoi)
 for value, error := range c.Seq2() {
 	fmt.Println(value, error)
@@ -210,7 +210,7 @@ allows the developer to implement operation `Count`.
 
 ```go
 m := []int{1, 2, 3, 4, 5, 6, 7}
-count := it.NewChain(it.From(m)).
+count := it.NewChain(it.FromSlice(m)).
 	Reduce(func(a, _ int) int { return a + 1 }, 0)
 fmt.Println(count)
 // Output: 7
@@ -223,9 +223,9 @@ pulls all items to the slice, sorts them and then pushes the values to the itera
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
-slice := it.Slice(s1)
+slice := it.AsSlice(s1)
 fmt.Println(slice)
 // Output: [a aa aaa aaaaaaa]
 ```
@@ -236,9 +236,9 @@ sorted. For example use a `slices.SortStableFunc` to get a stable sort.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.Sort(s0, func(slice []string) { slices.SortStableFunc(slice, strings.Compare) })
-slice := it.Slice(s1)
+slice := it.AsSlice(s1)
 fmt.Println(slice)
 // Output: [a aa aaa aaaaaaa]
 ```
@@ -249,10 +249,10 @@ Simply iterate backward - it must collect the slice first.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-s0 := it.From(n)
+s0 := it.FromSlice(n)
 s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
 s2 := it.Reverse(s1)
-slice := it.Slice(s2)
+slice := it.AsSlice(s2)
 fmt.Println(slice)
 // Output: [aaaaaaa aaa aa a]
 ```
@@ -268,7 +268,7 @@ Filtering
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-s0 := it.From2(m)
+s0 := it.From2Slice(m)
 s1 := it.Filter2(s0, func(k string, v int) bool { return v >= 1 })
 s2 := it.Sort2(s1, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
 for k, v := range s2 {
@@ -284,7 +284,7 @@ Note the sort is mandatory - the order of a range loop was changed from time to 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-s0 := it.From2(m)
+s0 := it.From2Slice(m)
 s1 := it.Map2(s0, func(k string, v int) (int, string) { return v, k })
 s2 := it.Sort2(s1, slices.Sort)
 for k, v := range s2 {
@@ -302,7 +302,7 @@ have `2` suffix as they return `itre.Seq`.
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-s0 := it.From2(m)
+s0 := it.From2Slice(m)
 s1 := it.Keys(s0)
 s2 := it.Sort(s1, slices.Sort)
 for s := range s2 {
@@ -317,7 +317,7 @@ for s := range s2 {
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-s0 := it.From2(m)
+s0 := it.From2Slice(m)
 s1 := it.Values(s0)
 s2 := it.Sort(s1, slices.Sort)
 for n := range s2 {
@@ -341,7 +341,7 @@ invalid map key type K (missing comparable constraint)
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-s0 := it.From2(m)
+s0 := it.From2Slice(m)
 s1 := it.Filter2(s0, func(_ string, v int) bool { return v == 2 })
 m2 := it.AsMap(s1)
 for k, v := range m2 {
@@ -356,7 +356,7 @@ All operations above can be chained.
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-chain2 := it.NewChain2(it.From2(m)).
+chain2 := it.NewChain2(it.From2Slice(m)).
 	Filter2(func(_ string, v int) bool { return v == 2 })
 for k, v := range chain2.Seq2() {
 	fmt.Println(k, v)
@@ -413,7 +413,7 @@ func Example_break_da_chain() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 
 	// create a method chain
-	chain := it.NewChain(it.From(n)).
+	chain := it.NewChain(it.FromSlice(n)).
 		Filter(func(s string) bool { return true })
 
 	// break it - with some syntax sugar
