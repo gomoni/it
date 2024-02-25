@@ -61,6 +61,10 @@ func (g Mapable[T, V]) Map(mapFunc MapFunc[T, V]) Mapable[V, T] {
 	}
 }
 
+func (g Mapable[T, V]) MapError(mapFunc MapErrorFunc[T, V]) Chain2[V, error] {
+	return Chain2[V, error]{seq: MapError(g.seq, mapFunc)}
+}
+
 func (g Mapable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
 	return Reduce(g.seq, reduceFunc, initial)
 }

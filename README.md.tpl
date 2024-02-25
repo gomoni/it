@@ -102,6 +102,22 @@ Simply iterate backward - it must collect the slice first.
 
 {{ "ExampleReverse" | example }}
 
+## Map with errors
+
+Sometimes there is no 1:1 transformation between `T` and `V` and mapping can
+fail. For this reason `it` as a very generic mapping from `it.Seq[T]` into
+`it.Seq2[K, V]`
+
+{{ "ExampleMapSeq2" | example }}
+
+As returning an error is so common operation in Go, there is a specialized function `MapError`
+
+{{ "ExampleMapError" | example }}
+
+Which can be used inside a chain as well
+
+{{ "ExampleMapable_MapError" | example }}
+
 ## iter.Seq2[K, V]
 
 Most operations does have the alternative working on `iter.Seq2[K, V]`. In
@@ -124,44 +140,19 @@ Sometimes one needs to pick only one of `K`, `V`, so `Keys` and `Values` does no
 And one can get values back as a map - note the `K` must be `comparable`
 otherwise type system does not allow one to construct a map.
 
-> invalid map key type K (missing comparable constraint)
+```
+invalid map key type K (missing comparable constraint)
+```
 
 {{ "ExampleAsMap" | example }}
 
 ## Chain2
 
-All operations above can get chained. The only limitation is `K` must be `comparable`.
+All operations above can get chained.
 
 {{ "ExampleChain2" | example }}
 
-# WIP
-
-## How enumerable stuff or errors?
-
-It turns out there are two equivalent solutions for both
-
-## "upgrade" to `iter.Seq2`
-
-As shown in `Example_idea_errors` - this is probably more idiomatic solution
-for index numbers than errors as `iter.Seq2` is a direct equivalent of
-
-```go
-for index, value := range slice {}
-```
-
-## provide a wrapper struct
-
-As shown in `Example_idea_enumerable` the whole problem can be solved by simply
-
-1. wrapper struct `Indexed`
-2. `Map(enumerable)` maps the sequence into sequence with indices
-
-## Conclusion
-
-Maybe the best solution is to provide both
-
-1. an idiomatic way how to "upgrade" the iter.Seq into iter.Seq2
-2. provide a default wrappers for common cases like `Indexed`, `Fallible`
+# Ideas
 
 ## break the chain
 

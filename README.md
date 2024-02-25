@@ -158,9 +158,8 @@ fmt.Println(count)
 
 ## Sort
 
-Sort is a specific operation as it must break the chain. All other operations
-can work on a single item at the time. Not sort - it first pull all items to
-slice, sort it and then push the values to the iterator.
+All other operations can work on a single item at the time. Not sort - it first
+pull all items to slice, sort it and then push the values to the iterator.
 
 It accepts `type SortFunc[T any] func([]T)`, so caller can specify exactly
 _how_ the sequence is going to be sorted. For example use a
@@ -187,6 +186,52 @@ s2 := it.Reverse(s1)
 slice := it.Slice(s2)
 fmt.Println(slice)
 // Output: [aaaaaaa aaa aa a]
+```
+
+## Map with errors
+
+Sometimes there is no 1:1 transformation between `T` and `V` and mapping can
+fail. For this reason `it` as a very generic mapping from `it.Seq[T]` into
+`it.Seq2[K, V]`
+
+```go
+n := []string{"forty-two", "42"}
+s0 := it.From(n)
+s1 := it.MapSeq2(s0, strconv.Atoi)
+for value, error := range s1 {
+	fmt.Println(value, error)
+}
+// Output:
+// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+// 42 <nil>
+```
+
+As returning an error is so common operation in Go, there is a specialized function `MapError`
+
+```go
+n := []string{"forty-two", "42"}
+s0 := it.From(n)
+s1 := it.MapError(s0, strconv.Atoi)
+for value, error := range s1 {
+	fmt.Println(value, error)
+}
+// Output:
+// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+// 42 <nil>
+```
+
+Which can be used inside a chain as well
+
+```go
+n := []string{"forty-two", "42"}
+c := it.NewMapable[string, int](it.From(n)).
+	MapError(strconv.Atoi)
+for value, error := range c.Seq2() {
+	fmt.Println(value, error)
+}
+// Output:
+// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+// 42 <nil>
 ```
 
 ## iter.Seq2[K, V]
@@ -262,7 +307,9 @@ for n := range s2 {
 And one can get values back as a map - note the `K` must be `comparable`
 otherwise type system does not allow one to construct a map.
 
-> invalid map key type K (missing comparable constraint)
+```
+invalid map key type K (missing comparable constraint)
+```
 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
@@ -279,49 +326,21 @@ for k, v := range m2 {
 
 ## Chain2
 
-All operations above can get chained. The only limitation is `K` must be `comparable`.
+All operations above can get chained.
 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-m2 := it.NewChain2(it.From2(m)).
-	Filter2(func(_ string, v int) bool { return v == 2 }).
-	AsMap()
-for k, v := range m2 {
+chain2 := it.NewChain2(it.From2(m)).
+	Filter2(func(_ string, v int) bool { return v == 2 })
+for k, v := range chain2.Seq2() {
 	fmt.Println(k, v)
 }
 // Output:
 // three 2
 ```
 
-# WIP
-
-## How enumerable stuff or errors?
-
-It turns out there are two equivalent solutions for both
-
-## "upgrade" to `iter.Seq2`
-
-As shown in `Example_idea_errors` - this is probably more idiomatic solution
-for index numbers than errors as `iter.Seq2` is a direct equivalent of
-
-```go
-for index, value := range slice {}
-```
-
-## provide a wrapper struct
-
-As shown in `Example_idea_enumerable` the whole problem can be solved by simply
-
-1. wrapper struct `Indexed`
-2. `Map(enumerable)` maps the sequence into sequence with indices
-
-## Conclusion
-
-Maybe the best solution is to provide both
-
-1. an idiomatic way how to "upgrade" the iter.Seq into iter.Seq2
-2. provide a default wrappers for common cases like `Indexed`, `Fallible`
+# Ideas
 
 ## break the chain
 

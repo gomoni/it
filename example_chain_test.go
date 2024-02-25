@@ -59,6 +59,18 @@ func ExampleMapable_Map() {
 	// Output: [2 3 7]
 }
 
+func ExampleMapable_MapError() {
+	n := []string{"forty-two", "42"}
+	c := it.NewMapable[string, int](it.From(n)).
+		MapError(strconv.Atoi)
+	for value, error := range c.Seq2() {
+		fmt.Println(value, error)
+	}
+	// Output:
+	// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+	// 42 <nil>
+}
+
 func ExampleMapable_Map_second() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	// maps string->int and int->string
