@@ -1,45 +1,57 @@
-# it: iterator utilities for Go using rangefunc experiment
+# it: experimental iterator utilities for Go
 
 # The problem
 
-Go lacks ergonomic composable idiomatic iterator utility library. `it` builds
+Go lacks an ergonomically composable idiomatic iterator utility library. Package `it` builds
 on top of a (rangefunc experiment)[https://go.dev/wiki/RangefuncExperiment] for
-go 1.22. Design goals are
+go 1.22.
 
- * be idiomatic: so it provides all functionality as pure functions and use
-   experimental `iter` package under the hood
- * be type safe: is uses generics everywhere
- * provide composable API when fits
- * support all Go's builtin types - slices/maps/channels
+The design goals are
 
-Non goals
+ * Minimal library providing just enough.
+ * Idiomatic Go: that means use generic functions and use `rangefunc`
+   experiment under the hood.
+ * Type safe: so use generics everywhere.
+ * Provide a composable API where practical
+ * Supports Go builtin types: slices/maps/channels
 
-> Supporting every possible iterator utility from
-> lo/gubrak/Rust/Haskell/Scala/Python/whatever. Especially if those can be
-> easily implemented via provided primitives.
+Non goals are
 
-IOW do not overwhelm users by all the functions it is possible to implement. Focus on
-a real cases, which can't be easily built using provided primitives.
+ * Support of every iterator utility only because it exists in lo/lodash/Rust/Haskell/Scala/Python
+ * Every possible permutation of primitives provides by the `it` itself.
 
 # Usage
 
 > Don't forget to install go 1.22 and `export GOEXPERIMENT=rangefunc`
 
-`it` provides methods, which can be chained together. Or a plain functions,
-which covers more use cases. However method chains makes a better sales pitch
-
-This example maps a slice to strings to int, add an index so only first two
-items are returned and convert the code back to slice of ints.
+The `it` provides methods that can be chained together. These are a better show
+case to developers.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
-res := it.NewMapable[string, int](it.From(n)).
+slice := it.NewMapable[string, int](it.From(n)).
 	Map(func(s string) int { return len(s) }).
 	Index().
 	Filter2(func(index int, _ int) bool { return index <= 1 }).
 	Values().
 	Slice()
-fmt.Println(res)
+fmt.Println(slice)
+// Output: [2 3]
+```
+
+All this can be done using simple functions and an explicit sequence passing.
+Go compiler will catch the unused variables and type mismatches helping the
+developer in this form too.
+
+```go
+n := []string{"aa", "aaa", "aaaaaaa", "a"}
+seq0 := it.From(n)
+seq1 := it.Map(seq0, func(s string) int { return len(s) })
+seq2 := it.Index(seq1)
+seq3 := it.Filter2(seq2, func(index int, _ int) bool { return index <= 1 })
+seq4 := it.Values(seq3)
+slice := it.Slice(seq4)
+fmt.Println(slice)
 // Output: [2 3]
 ```
 
@@ -47,10 +59,7 @@ fmt.Println(res)
 
 ## Filtering
 
-Everything is available as a plain function. Most of the helpers are exposed via
-`Chain` and `Mapable` structs methods allowing one to chain different
-operations together. However this is more or less a syntax sugar on top regular
-functions and explicit passing of variables.
+In order to limit the sequence, use a `Filter`.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
@@ -73,13 +82,13 @@ fmt.Println(slice)
 
 ## Indexing
 
-The regular Go code uses a following patter for iterating through a slice
+Every Go developer is familiar with iterating through a slice and two variable range form.
 
 ```go
 for index, value := range slice {}
 ```
 
-`it` does implement the `Index`/`IndexFrom` functions, which allows exactly that.
+The `it` does implement the `Index`/`IndexFrom` functions, which adds the index into the sequence.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
@@ -94,10 +103,9 @@ for index, value := range it.Index(s0) {
 // 3 a
 ```
 
-The way how this is implemented is it changes `iter.Seq[T]` into
-`iter.Seq2[int, T]`. That has some consequences for a chain as the `Chain2`
-struct is returned and `Filter2` method working on a pair must be called and
-later `Values()` dropping the index from the sequence.
+The way how this is implemented is that `it` returns `iter.Seq2[int, T]`. This
+type uses functions suffixed by `2`. That means `Filter2` is used in this
+example. The `Values` functions returns the second value later on.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
@@ -112,9 +120,9 @@ fmt.Println(res)
 
 ## Map
 
-Map transforms one type to another. This was challenging to support in method
-chaininig as Go type system don't allow to specify types of struct methods.
-However it works for a common case mapping two types.
+Map transforms one type into another. This is easy to do in Go as a simple
+function. Much harder to do via method. The `Mapable` allows the developer to
+use a `Map` in a method chain.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
@@ -128,8 +136,12 @@ fmt.Println(res)
 // Output: [string(2) string(3) string(7)]
 ```
 
-Supporting more than two types will lead to very messy API, however it is Go.
-Old plain functions are always theanswer.
+There are only two drawbacks
+
+ 1. Developer has to specify type parameters in advance
+ 2. It supports only two types - supporting more would lead to confusing API
+
+However good old functions have no such limitation and can be used instead.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
@@ -143,10 +155,58 @@ fmt.Println(slice)
 // Output: [2.0000E+00 3.0000E+00 7.0000E+00 1.0000E+00]
 ```
 
+
+## Map with errors
+
+Sometimes there is no 1:1 transformation between `T` and `V` and the mapping
+can fail. The `it` provides a mapping function from `iter.Seq[T]` into
+`iter.Seq2[K, V]`, which can solve this problem.
+
+```go
+n := []string{"forty-two", "42"}
+s0 := it.From(n)
+s1 := it.MapSeq2(s0, strconv.Atoi)
+for value, error := range s1 {
+	fmt.Println(value, error)
+}
+// Output:
+// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+// 42 <nil>
+```
+
+Since this is a very common operation in Go the specialised `MapError` function
+exists as an exception to the permutation rule above.
+
+```go
+n := []string{"forty-two", "42"}
+s0 := it.From(n)
+s1 := it.MapError(s0, strconv.Atoi)
+for value, error := range s1 {
+	fmt.Println(value, error)
+}
+// Output:
+// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+// 42 <nil>
+```
+
+And can be done inside a method chain too.
+
+```go
+n := []string{"forty-two", "42"}
+c := it.NewMapable[string, int](it.From(n)).
+	MapError(strconv.Atoi)
+for value, error := range c.Seq2() {
+	fmt.Println(value, error)
+}
+// Output:
+// 0 strconv.Atoi: parsing "forty-two": invalid syntax
+// 42 <nil>
+```
+
 ## Reduce
 
 Reduce is a common functional operation, except it returns a single value. It
-allows one to implement operation len.
+allows the developer to implement operation `Count`.
 
 ```go
 m := []int{1, 2, 3, 4, 5, 6, 7}
@@ -159,16 +219,25 @@ fmt.Println(count)
 ## Sort
 
 All other operations can work on a single item at the time. Not sort - it first
-pull all items to slice, sort it and then push the values to the iterator.
-
-It accepts `type SortFunc[T any] func([]T)`, so caller can specify exactly
-_how_ the sequence is going to be sorted. For example use a
-`slices.SortStableFunc` to get a stable sort.
+pulls all items to the slice, sorts them and then pushes the values to the iterator.
 
 ```go
 n := []string{"aa", "aaa", "aaaaaaa", "a"}
 s0 := it.From(n)
 s1 := it.Sort(s0, func(slice []string) { slices.SortFunc(slice, strings.Compare) })
+slice := it.Slice(s1)
+fmt.Println(slice)
+// Output: [a aa aaa aaaaaaa]
+```
+
+It accepts `type SortFunc[T any] func([]T)` instead of a `less` function. This
+allows the developer to specify exactly _how_ the sequence should be
+sorted. For example use a `slices.SortStableFunc` to get a stable sort.
+
+```go
+n := []string{"aa", "aaa", "aaaaaaa", "a"}
+s0 := it.From(n)
+s1 := it.Sort(s0, func(slice []string) { slices.SortStableFunc(slice, strings.Compare) })
 slice := it.Slice(s1)
 fmt.Println(slice)
 // Output: [a aa aaa aaaaaaa]
@@ -188,60 +257,13 @@ fmt.Println(slice)
 // Output: [aaaaaaa aaa aa a]
 ```
 
-## Map with errors
-
-Sometimes there is no 1:1 transformation between `T` and `V` and mapping can
-fail. For this reason `it` as a very generic mapping from `it.Seq[T]` into
-`it.Seq2[K, V]`
-
-```go
-n := []string{"forty-two", "42"}
-s0 := it.From(n)
-s1 := it.MapSeq2(s0, strconv.Atoi)
-for value, error := range s1 {
-	fmt.Println(value, error)
-}
-// Output:
-// 0 strconv.Atoi: parsing "forty-two": invalid syntax
-// 42 <nil>
-```
-
-As returning an error is so common operation in Go, there is a specialized function `MapError`
-
-```go
-n := []string{"forty-two", "42"}
-s0 := it.From(n)
-s1 := it.MapError(s0, strconv.Atoi)
-for value, error := range s1 {
-	fmt.Println(value, error)
-}
-// Output:
-// 0 strconv.Atoi: parsing "forty-two": invalid syntax
-// 42 <nil>
-```
-
-Which can be used inside a chain as well
-
-```go
-n := []string{"forty-two", "42"}
-c := it.NewMapable[string, int](it.From(n)).
-	MapError(strconv.Atoi)
-for value, error := range c.Seq2() {
-	fmt.Println(value, error)
-}
-// Output:
-// 0 strconv.Atoi: parsing "forty-two": invalid syntax
-// 42 <nil>
-```
-
-## iter.Seq2[K, V]
+## iter.Seq2[K, V] and Chain2
 
 Most operations does have the alternative working on `iter.Seq2[K, V]`. In
-order to distinguish the names, all functions and chains has a suffix `2`, so
+order to distinguish between the types, all functions and structs has a suffix `2`, so
 it is clear if method works with a single value or a pair.
 
-Filtering - as the range order of iter.Seq2 is random in Go, the sequence must
-be sorted first.
+Filtering
 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
@@ -256,6 +278,8 @@ for k, v := range s2 {
 // three 2
 // two 1
 ```
+
+Note the sort is mandatory - the order of a range loop was changed from time to time.
 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
@@ -272,7 +296,8 @@ for k, v := range s2 {
 // 2 three
 ```
 
-Sometimes one needs to pick only one of `K`, `V`, so `Keys` and `Values` does not have `2` suffix.
+Sometimes developer only one of `K`, `V`, so `Keys` and `Values` do not
+have `2` suffix as they return `itre.Seq`.
 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
@@ -304,8 +329,10 @@ for n := range s2 {
 // 2
 ```
 
-And one can get values back as a map - note the `K` must be `comparable`
-otherwise type system does not allow one to construct a map.
+And the developer can get values back as a map - note the `K` must be
+`comparable` otherwise the type system will not allow one to construct a map. This
+is the reason `Chain2` does not have `AsMap` method. Doing so would impose the
+constraint to both `K` and `V` and limiting the usability of a `Chain2`.
 
 ```
 invalid map key type K (missing comparable constraint)
@@ -324,9 +351,7 @@ for k, v := range m2 {
 // three 2
 ```
 
-## Chain2
-
-All operations above can get chained.
+All operations above can be chained.
 
 ```go
 m := map[string]int{"one": 0, "two": 1, "three": 2}
@@ -341,6 +366,8 @@ for k, v := range chain2.Seq2() {
 ```
 
 # Ideas
+
+Some crazy and not so crazy ideas to expolse
 
 ## break the chain
 
@@ -362,14 +389,20 @@ One of the coolest (keep in mind it was a late night one) ideas may be
     Map(magicSeq, foo).Filter(bar).Slice()
 ```
 
-Implemented in break_da_chain example test in ideas_test.go.
+Implemented in break_da_chain example test in `ideas_test.go`.
 
-## Others
 
- * which operations `it` should have?
- * make them context aware?????
+## make iterations context aware?????
+
+ Some options
+
+ 1. don't do that
+ 1. provide `FilterContext` et all
+ 1. `it/itctx` package
 
 # Other libraries
+
+Inspiration and other cool projects.
 
 ## lo
 
@@ -395,7 +428,6 @@ An example is `FilterMap` function. It can be implemented as `Filter` and
 `Map`, yet it's not easy to do in `lo`
 
 https://pkg.go.dev/github.com/samber/lo#pkg-functions
-
 
 ## gubrak
 

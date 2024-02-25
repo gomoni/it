@@ -2,45 +2,44 @@
 
 # The problem
 
-Go lacks ergonomic composable idiomatic iterator utility library. `it` builds
+Go lacks an ergonomically composable idiomatic iterator utility library. Package `it` builds
 on top of a (rangefunc experiment)[https://go.dev/wiki/RangefuncExperiment] for
-go 1.22. Design goals are
+go 1.22.
 
- * be idiomatic: so it provides all functionality as pure functions and use
-   experimental `iter` package under the hood
- * be type safe: is uses generics everywhere
- * provide composable API when fits
- * support all Go's builtin types - slices/maps/channels
+The design goals are
 
-Non goals
+ * Minimal library providing just enough.
+ * Idiomatic Go: that means use generic functions and use `rangefunc`
+   experiment under the hood.
+ * Type safe: so use generics everywhere.
+ * Provide a composable API where practical
+ * Supports Go builtin types: slices/maps/channels
 
-> Supporting every possible iterator utility from
-> lo/gubrak/Rust/Haskell/Scala/Python/whatever. Especially if those can be
-> easily implemented via provided primitives.
+Non goals are
 
-IOW do not overwhelm users by all the functions it is possible to implement. Focus on
-a real cases, which can't be easily built using provided primitives.
+ * Support of every iterator utility only because it exists in lo/lodash/Rust/Haskell/Scala/Python
+ * Every possible permutation of primitives provides by the `it` itself.
 
 # Usage
 
 > Don't forget to install go 1.22 and `export GOEXPERIMENT=rangefunc`
 
-`it` provides methods, which can be chained together. Or a plain functions,
-which covers more use cases. However method chains makes a better sales pitch
+The `it` provides methods that can be chained together. These are a better show
+case to developers.
 
-This example maps a slice to strings to int, add an index so only first two
-items are returned and convert the code back to slice of ints.
+{{ "Example_readme_chain" | example }}
 
-{{ "ExampleMapable_Index" | example }}
+All this can be done using simple functions and an explicit sequence passing.
+Go compiler will catch the unused variables and type mismatches helping the
+developer in this form too.
+
+{{ "Example_readme_plain" | example }}
 
 # Examples
 
 ## Filtering
 
-Everything is available as a plain function. Most of the helpers are exposed via
-`Chain` and `Mapable` structs methods allowing one to chain different
-operations together. However this is more or less a syntax sugar on top regular
-functions and explicit passing of variables.
+In order to limit the sequence, use a `Filter`.
 
 {{ "ExampleChain_Filter" | example }}
 
@@ -48,53 +47,76 @@ functions and explicit passing of variables.
 
 ## Indexing
 
-The regular Go code uses a following patter for iterating through a slice
+Every Go developer is familiar with iterating through a slice and two variable range form.
 
 ```go
 for index, value := range slice {}
 ```
 
-`it` does implement the `Index`/`IndexFrom` functions, which allows exactly that.
+The `it` does implement the `Index`/`IndexFrom` functions, which adds the index into the sequence.
 
 {{ "ExampleIndex" | example }}
 
-The way how this is implemented is it changes `iter.Seq[T]` into
-`iter.Seq2[int, T]`. That has some consequences for a chain as the `Chain2`
-struct is returned and `Filter2` method working on a pair must be called and
-later `Values()` dropping the index from the sequence.
+The way how this is implemented is that `it` returns `iter.Seq2[int, T]`. This
+type uses functions suffixed by `2`. That means `Filter2` is used in this
+example. The `Values` functions returns the second value later on.
 
 {{ "ExampleChain_Index" | example }}
 
 ## Map
 
-Map transforms one type to another. This was challenging to support in method
-chaininig as Go type system don't allow to specify types of struct methods.
-However it works for a common case mapping two types.
+Map transforms one type into another. This is easy to do in Go as a simple
+function. Much harder to do via method. The `Mapable` allows the developer to
+use a `Map` in a method chain.
 
 {{ "ExampleMapable_Map_second" | example }}
 
-Supporting more than two types will lead to very messy API, however it is Go.
-Old plain functions are always theanswer.
+There are only two drawbacks
+
+ 1. Developer has to specify type parameters in advance
+ 2. It supports only two types - supporting more would lead to confusing API
+
+However good old functions have no such limitation and can be used instead.
 
 {{ "ExampleMap" | example }}
+
+
+## Map with errors
+
+Sometimes there is no 1:1 transformation between `T` and `V` and the mapping
+can fail. The `it` provides a mapping function from `iter.Seq[T]` into
+`iter.Seq2[K, V]`, which can solve this problem.
+
+{{ "ExampleMapSeq2" | example }}
+
+Since this is a very common operation in Go the specialised `MapError` function
+exists as an exception to the permutation rule above.
+
+{{ "ExampleMapError" | example }}
+
+And can be done inside a method chain too.
+
+{{ "ExampleMapable_MapError" | example }}
 
 ## Reduce
 
 Reduce is a common functional operation, except it returns a single value. It
-allows one to implement operation len.
+allows the developer to implement operation `Count`.
 
 {{ "ExampleChain_Reduce" | example }}
 
 ## Sort
 
 All other operations can work on a single item at the time. Not sort - it first
-pull all items to slice, sort it and then push the values to the iterator.
-
-It accepts `type SortFunc[T any] func([]T)`, so caller can specify exactly
-_how_ the sequence is going to be sorted. For example use a
-`slices.SortStableFunc` to get a stable sort.
+pulls all items to the slice, sorts them and then pushes the values to the iterator.
 
 {{ "ExampleSort" | example }}
+
+It accepts `type SortFunc[T any] func([]T)` instead of a `less` function. This
+allows the developer to specify exactly _how_ the sequence should be
+sorted. For example use a `slices.SortStableFunc` to get a stable sort.
+
+{{ "ExampleSort_stable" | example }}
 
 ## Reverse
 
@@ -102,43 +124,31 @@ Simply iterate backward - it must collect the slice first.
 
 {{ "ExampleReverse" | example }}
 
-## Map with errors
-
-Sometimes there is no 1:1 transformation between `T` and `V` and mapping can
-fail. For this reason `it` as a very generic mapping from `it.Seq[T]` into
-`it.Seq2[K, V]`
-
-{{ "ExampleMapSeq2" | example }}
-
-As returning an error is so common operation in Go, there is a specialized function `MapError`
-
-{{ "ExampleMapError" | example }}
-
-Which can be used inside a chain as well
-
-{{ "ExampleMapable_MapError" | example }}
-
-## iter.Seq2[K, V]
+## iter.Seq2[K, V] and Chain2
 
 Most operations does have the alternative working on `iter.Seq2[K, V]`. In
-order to distinguish the names, all functions and chains has a suffix `2`, so
+order to distinguish between the types, all functions and structs has a suffix `2`, so
 it is clear if method works with a single value or a pair.
 
-Filtering - as the range order of iter.Seq2 is random in Go, the sequence must
-be sorted first.
+Filtering
 
 {{ "ExampleFilter2" | example }}
 
+Note the sort is mandatory - the order of a range loop was changed from time to time.
+
 {{ "ExampleMap2" | example }}
 
-Sometimes one needs to pick only one of `K`, `V`, so `Keys` and `Values` does not have `2` suffix.
+Sometimes developer only one of `K`, `V`, so `Keys` and `Values` do not
+have `2` suffix as they return `itre.Seq`.
 
 {{ "ExampleKeys" | example }}
 
 {{ "ExampleValues" | example }}
 
-And one can get values back as a map - note the `K` must be `comparable`
-otherwise type system does not allow one to construct a map.
+And the developer can get values back as a map - note the `K` must be
+`comparable` otherwise the type system will not allow one to construct a map. This
+is the reason `Chain2` does not have `AsMap` method. Doing so would impose the
+constraint to both `K` and `V` and limiting the usability of a `Chain2`.
 
 ```
 invalid map key type K (missing comparable constraint)
@@ -146,13 +156,13 @@ invalid map key type K (missing comparable constraint)
 
 {{ "ExampleAsMap" | example }}
 
-## Chain2
-
-All operations above can get chained.
+All operations above can be chained.
 
 {{ "ExampleChain2" | example }}
 
 # Ideas
+
+Some crazy and not so crazy ideas to expolse
 
 ## break the chain
 
@@ -174,14 +184,20 @@ One of the coolest (keep in mind it was a late night one) ideas may be
     Map(magicSeq, foo).Filter(bar).Slice()
 ```
 
-Implemented in break_da_chain example test in ideas_test.go.
+Implemented in break_da_chain example test in `ideas_test.go`.
 
-## Others
 
- * which operations `it` should have?
- * make them context aware?????
+## make iterations context aware?????
+
+ Some options
+
+ 1. don't do that
+ 1. provide `FilterContext` et all
+ 1. `it/itctx` package
 
 # Other libraries
+
+Inspiration and other cool projects.
 
 ## lo
 
@@ -207,7 +223,6 @@ An example is `FilterMap` function. It can be implemented as `Filter` and
 `Map`, yet it's not easy to do in `lo`
 
 https://pkg.go.dev/github.com/samber/lo#pkg-functions
-
 
 ## gubrak
 

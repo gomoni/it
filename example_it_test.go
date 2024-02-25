@@ -89,6 +89,15 @@ func ExampleSort() {
 	// Output: [a aa aaa aaaaaaa]
 }
 
+func ExampleSort_stable() {
+	n := []string{"aa", "aaa", "aaaaaaa", "a"}
+	s0 := it.From(n)
+	s1 := it.Sort(s0, func(slice []string) { slices.SortStableFunc(slice, strings.Compare) })
+	slice := it.Slice(s1)
+	fmt.Println(slice)
+	// Output: [a aa aaa aaaaaaa]
+}
+
 func ExampleReverse() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 	s0 := it.From(n)

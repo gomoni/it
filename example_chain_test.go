@@ -36,15 +36,27 @@ func ExampleChain_Reduce() {
 	// Output: 7
 }
 
-func ExampleMapable_Index() {
+func Example_readme_chain() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
-	res := it.NewMapable[string, int](it.From(n)).
+	slice := it.NewMapable[string, int](it.From(n)).
 		Map(func(s string) int { return len(s) }).
 		Index().
 		Filter2(func(index int, _ int) bool { return index <= 1 }).
 		Values().
 		Slice()
-	fmt.Println(res)
+	fmt.Println(slice)
+	// Output: [2 3]
+}
+
+func Example_readme_plain() {
+	n := []string{"aa", "aaa", "aaaaaaa", "a"}
+	seq0 := it.From(n)
+	seq1 := it.Map(seq0, func(s string) int { return len(s) })
+	seq2 := it.Index(seq1)
+	seq3 := it.Filter2(seq2, func(index int, _ int) bool { return index <= 1 })
+	seq4 := it.Values(seq3)
+	slice := it.Slice(seq4)
+	fmt.Println(slice)
 	// Output: [2 3]
 }
 
