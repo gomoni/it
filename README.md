@@ -1,4 +1,4 @@
-# it: experimental iterator utilities for Go
+# it: iterator utilities for Go using rangefunc experiment
 
 # The problem
 
