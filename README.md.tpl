@@ -110,11 +110,13 @@ fail. For this reason `it` as a very generic mapping from `it.Seq[T]` into
 
 {{ "ExampleMapSeq2" | example }}
 
-However returning an error is so common operation in go, there's simpler wrapper `MapError`
+As returning an error is so common operation in Go, there is a specialized function `MapError`
 
 {{ "ExampleMapError" | example }}
 
-> The chain support is not implemented in this case - will need one to rething it2.go struct(s)
+Which can be used inside a chain as well
+
+{{ "ExampleMapable_MapError" | example }}
 
 ## iter.Seq2[K, V]
 
@@ -138,25 +140,19 @@ Sometimes one needs to pick only one of `K`, `V`, so `Keys` and `Values` does no
 And one can get values back as a map - note the `K` must be `comparable`
 otherwise type system does not allow one to construct a map.
 
-> invalid map key type K (missing comparable constraint)
+```
+invalid map key type K (missing comparable constraint)
+```
 
 {{ "ExampleAsMap" | example }}
 
 ## Chain2
 
-All operations above can get chained. The only limitation is `K` must be `comparable`.
+All operations above can get chained.
 
 {{ "ExampleChain2" | example }}
 
-# WIP
-
-## chain support for MapError
-
-The biggest problem is Chain2 is typed as [K comparable, V any] and map is going to return `[V any, error]`
-
-1. drop MapSeq2 - it's too complicated
-2. reintroduce the WithError helper, which will return `[T, error]`
-3. something else?
+# Ideas
 
 ## break the chain
 

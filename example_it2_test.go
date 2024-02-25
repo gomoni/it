@@ -83,10 +83,9 @@ func ExampleAsMap() {
 func ExampleChain2() {
 	m := map[string]int{"one": 0, "two": 1, "three": 2}
 
-	m2 := it.NewChain2(it.From2(m)).
-		Filter2(func(_ string, v int) bool { return v == 2 }).
-		AsMap()
-	for k, v := range m2 {
+	chain2 := it.NewChain2(it.From2(m)).
+		Filter2(func(_ string, v int) bool { return v == 2 })
+	for k, v := range chain2.Seq2() {
 		fmt.Println(k, v)
 	}
 	// Output:
