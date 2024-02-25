@@ -59,7 +59,7 @@ func ExampleMap() {
 func ExampleMapSeq2() {
 	n := []string{"forty-two", "42"}
 	s0 := it.From(n)
-	s1 := it.MapSeq2(s0, func(s string) (int, error) { return strconv.Atoi(s) })
+	s1 := it.MapSeq2(s0, strconv.Atoi)
 	for value, error := range s1 {
 		fmt.Println(value, error)
 	}
