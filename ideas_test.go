@@ -34,9 +34,11 @@ func (y pusher) wait() {
 func Example_break_da_chain() {
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
 
+	// create a method chain
 	chain := it.NewChain(it.From(n)).
 		Filter(func(s string) bool { return true })
 
+	// break it - with some syntax sugar
 	p := pusher{stack: make(chan string)}
 	defer p.wait()
 	go func() {
@@ -46,8 +48,10 @@ func Example_break_da_chain() {
 		}
 	}()
 
-	chain2 := it.NewChain(p.seq())
+	// continue here
+	chain2 := it.NewChain(p.seq()).
+		Filter(func(s string) bool { return len(s) > 2 })
 	slice := chain2.Slice()
 	fmt.Println(slice)
-	// Output: [aa aaa aaaaaaa a]
+	// Output: [aaa aaaaaaa]
 }
