@@ -32,6 +32,10 @@ func (g Chain[T]) Slice() []T {
 	return AsSlice(g.seq)
 }
 
+func (g Chain[T]) Sort(sortFunc SortFunc[T]) Chain[T] {
+	return Chain[T]{seq: Sort(g.seq, sortFunc)}
+}
+
 // Mapable allows the operations to be chained via method calls and
 // additionally T -> V and V -> T mapping can be added
 type Mapable[T, V any] struct {
@@ -71,4 +75,8 @@ func (g Mapable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
 
 func (g Mapable[T, V]) Slice() []T {
 	return AsSlice(g.seq)
+}
+
+func (g Mapable[T, V]) Sort(sortFunc SortFunc[T]) Mapable[T, V] {
+	return Mapable[T, V]{seq: Sort(g.seq, sortFunc)}
 }
