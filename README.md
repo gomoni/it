@@ -1,4 +1,4 @@
-# it: experimental iterator utilities for Go
+# it: simply the best iterator utilities for Go
 
 # The problem
 
@@ -443,6 +443,30 @@ func Example_break_da_chain() {
  1. don't do that
  1. provide `FilterContext` et all
  1. `it/itctx` package
+
+## Named types
+
+See https://go.dev/blog/deconstructing-type-parameters and `func Clone[S ~[]E,
+E any](s S) S`. The `it` has the same problem
+
+```diff
+func PrintSorted(ms MySlice) string {
+	c := it.NewChain(it.FromSlice(ms)).Sort(slices.Sort).Slice()
+-	return c.String() // FAILS TO COMPILE
++   return MySlice(c).String()  // this works
+}
+```
+
+This is not a solution as the original `S` got lost.
+
+```
+func fromSlice[S ~[]E, E any](slice S) iter.Seq[E] {
+```
+
+Possible solutions:
+
+ 1. ignore it - it is easy to go back to the original type
+ 2. do not return iter.Seq and have a wrapper structure of type `Seq[S ~[]E, E any]`
 
 # Other libraries
 
