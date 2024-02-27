@@ -367,7 +367,11 @@ for k, v := range chain2.Seq2() {
 
 # Ideas
 
-Some crazy and not so crazy ideas to expolse
+Some crazy and not so crazy ideas to explore
+
+## Benchmarks
+
+As suggested by jerf on Reddit, it is interesting to compare rangefunc with plain `range` loop. First set of benchmarks was added in https://github.com/gomoni/it/pull/8
 
 ## break the chain
 
