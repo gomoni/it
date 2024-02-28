@@ -22,14 +22,7 @@ func From2Slice[K comparable, V any](m map[K]V) iter.Seq2[K, V] {
 
 func Filter2[K, V any](seq iter.Seq2[K, V], filterFunc Filter2Func[K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
-		next, stop := iter.Pull2(seq)
-		defer stop()
-
-		for {
-			k, v, ok := next()
-			if !ok {
-				return
-			}
+		for k, v := range seq {
 			if shouldYield := filterFunc(k, v); !shouldYield {
 				continue
 			}
@@ -42,14 +35,7 @@ func Filter2[K, V any](seq iter.Seq2[K, V], filterFunc Filter2Func[K, V]) iter.S
 
 func Map2[K, V, K2, V2 any](seq iter.Seq2[K, V], mapFunc Map2Func[K, V, K2, V2]) iter.Seq2[K2, V2] {
 	return func(yield func(K2, V2) bool) {
-		next, stop := iter.Pull2(seq)
-		defer stop()
-
-		for {
-			k, v, ok := next()
-			if !ok {
-				return
-			}
+		for k, v := range seq {
 			k2, v2 := mapFunc(k, v)
 			if !yield(k2, v2) {
 				return
@@ -60,14 +46,7 @@ func Map2[K, V, K2, V2 any](seq iter.Seq2[K, V], mapFunc Map2Func[K, V, K2, V2])
 
 func Keys[K any, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 	return func(yield func(K) bool) {
-		next, stop := iter.Pull2(seq)
-		defer stop()
-
-		for {
-			k, _, ok := next()
-			if !ok {
-				return
-			}
+		for k, _ := range seq {
 			if !yield(k) {
 				return
 			}
@@ -77,14 +56,7 @@ func Keys[K any, V any](seq iter.Seq2[K, V]) iter.Seq[K] {
 
 func Values[K any, V any](seq iter.Seq2[K, V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
-		next, stop := iter.Pull2(seq)
-		defer stop()
-
-		for {
-			_, v, ok := next()
-			if !ok {
-				return
-			}
+		for _, v := range seq {
 			if !yield(v) {
 				return
 			}
@@ -116,14 +88,9 @@ func Sort2[K comparable, V any](seq iter.Seq2[K, V], sortFunc SortFunc[K]) iter.
 // AsMap converts the iter.Seq2 into map
 func AsMap[K comparable, V any](seq iter.Seq2[K, V]) map[K]V {
 	ret := make(map[K]V, 1024)
-	next, stop := iter.Pull2(seq)
-	defer stop()
-
-	for {
-		k, v, ok := next()
-		if !ok {
-			return ret
-		}
+	for k, v := range seq {
 		ret[k] = v
 	}
+
+	return ret
 }
