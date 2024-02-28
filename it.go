@@ -36,18 +36,11 @@ func FromSlice[T any](slice []T) iter.Seq[T] {
 // Filter yields only values for which filterFunc returns true
 func Filter[T any](s iter.Seq[T], filterFunc FilterFunc[T]) iter.Seq[T] {
 	return func(yield func(T) bool) {
-		next, stop := iter.Pull(s)
-		defer stop()
-
-		for {
-			t, ok := next()
-			if !ok {
-				return
-			}
-			if shouldYield := filterFunc(t); !shouldYield {
+		for v := range s {
+			if shouldYield := filterFunc(v); !shouldYield {
 				continue
 			}
-			if !yield(t) {
+			if !yield(v) {
 				return
 			}
 		}
@@ -61,15 +54,8 @@ func Filter[T any](s iter.Seq[T], filterFunc FilterFunc[T]) iter.Seq[T] {
 func IndexFrom[T any](seq iter.Seq[T], initial int) iter.Seq2[int, T] {
 	index := initial
 	return func(yield func(int, T) bool) {
-		next, stop := iter.Pull(seq)
-		defer stop()
-
-		for {
-			t, ok := next()
-			if !ok {
-				return
-			}
-			if !yield(index, t) {
+		for v := range seq {
+			if !yield(index, v) {
 				return
 			}
 			index++
@@ -86,15 +72,8 @@ func Index[T any](seq iter.Seq[T]) iter.Seq2[int, T] {
 // Map calls a mapping function on each member of the sequence
 func Map[T, V any](s iter.Seq[T], mapFunc MapFunc[T, V]) iter.Seq[V] {
 	return func(yield func(V) bool) {
-		next, stop := iter.Pull(s)
-		defer stop()
-
-		for {
-			t, ok := next()
-			if !ok {
-				return
-			}
-			v := mapFunc(t)
+		for v := range s {
+			v := mapFunc(v)
 			if !yield(v) {
 				return
 			}
@@ -106,15 +85,8 @@ func Map[T, V any](s iter.Seq[T], mapFunc MapFunc[T, V]) iter.Seq[V] {
 // and a typical use is return a mapped type together with an error
 func MapSeq2[T, K, V any](seq iter.Seq[T], mapFunc MapSeq2Func[T, K, V]) iter.Seq2[K, V] {
 	return func(yield func(K, V) bool) {
-		next, stop := iter.Pull(seq)
-		defer stop()
-
-		for {
-			t, ok := next()
-			if !ok {
-				return
-			}
-			k, v := mapFunc(t)
+		for v := range seq {
+			k, v := mapFunc(v)
 			if !yield(k, v) {
 				return
 			}
@@ -134,16 +106,12 @@ func MapError[T, V any](seq iter.Seq[T], mapFunc MapErrorFunc[T, V]) iter.Seq2[V
 
 func Reduce[T any](s iter.Seq[T], reduceFunc ReduceFunc[T], initial T) T {
 	ret := initial
-	next, stop := iter.Pull(s)
-	defer stop()
 
-	for {
-		t, ok := next()
-		if !ok {
-			return ret
-		}
-		ret = reduceFunc(ret, t)
+	for v := range s {
+		ret = reduceFunc(ret, v)
 	}
+
+	return ret
 }
 
 func Reverse[T any](s iter.Seq[T]) iter.Seq[T] {
@@ -169,14 +137,10 @@ func Sort[T any](s iter.Seq[T], sortFunc SortFunc[T]) iter.Seq[T] {
 // TODO: provide IntoScile(slice []T, seq iter.Seq[T])?
 func AsSlice[T any](seq iter.Seq[T]) []T {
 	ret := make([]T, 0, 1024)
-	next, stop := iter.Pull(seq)
-	defer stop()
 
-	for {
-		t, ok := next()
-		if !ok {
-			return ret
-		}
-		ret = append(ret, t)
+	for v := range seq {
+		ret = append(ret, v)
 	}
+
+	return ret
 }
