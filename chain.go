@@ -1,43 +1,30 @@
 package it
 
-import "iter"
+import (
+	"iter"
+	"slices"
 
-// Chain allows the sequence operations to be chained via method calls
-// works with a single type
-type Chain[T any] struct {
-	seq iter.Seq[T]
-}
+	"github.com/gomoni/it/islices"
+)
+
+type Chain[T any] iter.Seq[T]
 
 func NewChain[T any](seq iter.Seq[T]) Chain[T] {
-	return Chain[T]{seq: seq}
+	return Chain[T](seq)
 }
 
-func (g Chain[T]) Seq() iter.Seq[T] {
-	return g.seq
+func (ch Chain[T]) Seq() iter.Seq[T] {
+	return iter.Seq[T](ch)
 }
 
-func (g Chain[T]) Filter(filterFunc FilterFunc[T]) Chain[T] {
-	return Chain[T]{seq: Filter(g.seq, filterFunc)}
+func (g Chain[T]) Filter(filterFunc islices.FilterFunc[T]) Chain[T] {
+	return Chain[T](islices.Filter(g.Seq(), filterFunc))
 }
 
-func (g Chain[T]) Index() Chain2[int, T] {
-	return Chain2[int, T]{seq: Index(g.seq)}
+func (g Chain[T]) Collect() []T {
+	return slices.Collect(g.Seq())
 }
 
-func (g Chain[T]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
-	return Reduce(g.seq, reduceFunc, initial)
-}
-
-func (g Chain[T]) Slice() []T {
-	return AsSlice(g.seq)
-}
-
-func (g Chain[T]) Sort(sortFunc SortFunc[T]) Chain[T] {
-	return Chain[T]{seq: Sort(g.seq, sortFunc)}
-}
-
-// Mapable allows the operations to be chained via method calls and
-// additionally T -> V and V -> T mapping can be added
 type Mapable[T, V any] struct {
 	seq  iter.Seq[T]
 	none V
@@ -49,34 +36,22 @@ func NewMapable[T, V any](seq iter.Seq[T]) Mapable[T, V] {
 	}
 }
 
-func (g Mapable[T, V]) Filter(filterFunc FilterFunc[T]) Mapable[T, V] {
+func (g Mapable[T, V]) Seq() iter.Seq[T] {
+	return g.seq
+}
+
+func (g Mapable[T, V]) Filter(filterFunc islices.FilterFunc[T]) Mapable[T, V] {
 	return Mapable[T, V]{
-		seq: Filter(g.seq, filterFunc),
+		seq: islices.Filter(g.seq, filterFunc),
 	}
 }
 
-func (g Mapable[T, V]) Index() Chain2[int, T] {
-	return Chain2[int, T]{seq: Index(g.seq)}
-}
-
-func (g Mapable[T, V]) Map(mapFunc MapFunc[T, V]) Mapable[V, T] {
+func (g Mapable[T, V]) Map(mapFunc islices.MapFunc[T, V]) Mapable[V, T] {
 	return Mapable[V, T]{
-		seq: Map(g.seq, mapFunc),
+		seq: islices.Map(g.seq, mapFunc),
 	}
 }
 
-func (g Mapable[T, V]) MapError(mapFunc MapErrorFunc[T, V]) Chain2[V, error] {
-	return Chain2[V, error]{seq: MapError(g.seq, mapFunc)}
-}
-
-func (g Mapable[T, V]) Reduce(reduceFunc ReduceFunc[T], initial T) T {
-	return Reduce(g.seq, reduceFunc, initial)
-}
-
-func (g Mapable[T, V]) Slice() []T {
-	return AsSlice(g.seq)
-}
-
-func (g Mapable[T, V]) Sort(sortFunc SortFunc[T]) Mapable[T, V] {
-	return Mapable[T, V]{seq: Sort(g.seq, sortFunc)}
+func (g Mapable[T, V]) Collect() []T {
+	return slices.Collect(g.Seq())
 }

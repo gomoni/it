@@ -1,10 +1,10 @@
 package it_test
 
 import (
-	"iter"
+	"slices"
 	"testing"
 
-	"github.com/gomoni/it"
+	"github.com/gomoni/it/islices"
 )
 
 const size = 1024 * 1024
@@ -18,94 +18,58 @@ func init() {
 	}
 }
 
-func push(size int) iter.Seq[int] {
-	return func(yield func(int) bool) {
-		for value := range size {
-			if !yield(value) {
-				break
-			}
-		}
-	}
-}
-
-// BenchmarkRange benchmarks the iterator pushing from a slice
-// baseline: ~2350 ops
+// BenchmarkRange benchmarks the for range loop over a slice
 func BenchmarkRange(b *testing.B) {
 	for range b.N {
 		cnt := 0
-		for value := range in1M {
+		for _, value := range in1M {
 			cnt += value
 		}
 	}
 }
 
-// BenchmarkPushIterator benchmarks the iterator pushing from a slice
-// benchmarks the overhead of a pull iterator over plain range version
-// overhead over BenchmarkRange is less than 10%
-func BenchmarkPushIterator(b *testing.B) {
+// BenchmarkRangeAll benchmarks the slices.All
+func BenchmarkRangeAll(b *testing.B) {
 	for range b.N {
 		cnt := 0
-		for value := range push(size) {
+		for _, value := range slices.All(in1M) {
 			cnt += value
 		}
 	}
 }
 
-func pull(seq iter.Seq[int]) iter.Seq[int] {
-	return func(yield func(int) bool) {
-		next, stop := iter.Pull(seq)
-		defer stop()
+// BenchmarkRangeValues benchmarks the slices.Values
+func BenchmarkRangeValues(b *testing.B) {
+	for range b.N {
+		cnt := 0
+		for value := range slices.Values(in1M) {
+			cnt += value
+		}
+	}
+}
 
-		for {
-			t, ok := next()
-			if !ok || !yield(t) {
-				return
+// BenchmarkRangeAll benchmarks a range loop skipping the odd numbers
+func BenchmarkRangeEven(b *testing.B) {
+	for range b.N {
+		cnt := 0
+		for _, value := range in1M {
+			if value%2 != 0 {
+				continue
 			}
-		}
-	}
-}
-
-// BenchmarkPullIterator tests slice -> push -> pull
-func BenchmarkPullIterator(b *testing.B) {
-	for range b.N {
-		cnt := 0
-		for value := range pull(push(size)) {
 			cnt += value
 		}
 	}
 }
 
-func rangeFilterSlice(in []int, filterFunc it.FilterFunc[int]) []int {
-	ret := make([]int, 0, len(in))
-	for _, i := range in {
-		if filterFunc(i) {
-			ret = append(ret, i)
-		}
-	}
-	return ret
-}
-
-// BenchmarkRangeFilter benchmarks the for index, value := range loop with a filter - this is a baseline
-func BenchmarkRangeFilterSlice(b *testing.B) {
+// BenchmarkRangeFilterEven uses a Filter method on a sequence to do the filtering
+func BenchmarkRangeValuesFilterEven(b *testing.B) {
 	for range b.N {
-		rangeFilterSlice(in1M, func(i int) bool { return i%2 == 0 })
-	}
-}
-
-// Benchmark filters push -> pull -> pull operation
-func BenchmarkItFilterSlice(b *testing.B) {
-	for range b.N {
-		seq0 := it.Filter(it.FromSlice(in1M), func(i int) bool { return i%2 == 0 })
-		it.AsSlice(seq0)
-	}
-}
-
-// Benchmark filters push -> pull -> pull but does not allocate
-func BenchmarkItFilterFor(b *testing.B) {
-	for range b.N {
-		seq0 := it.Filter(it.FromSlice(in1M), func(i int) bool { return i%2 == 0 })
 		cnt := 0
-		for value := range seq0 {
+		all := slices.Values(in1M)
+		evens := islices.Filter(all, func(value int) bool {
+			return value%2 == 0
+		})
+		for value := range evens {
 			cnt += value
 		}
 	}
