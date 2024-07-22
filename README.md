@@ -12,7 +12,12 @@ chaining of iterator methods impossible. `it` provides a simple helper struct
 
 # Usage
 
-> Don't forget to install go 1.22 and `export GOEXPERIMENT=rangefunc`
+> Don't forget to install go 1.23rc2
+
+```sh
+$ go1.23rc2 get go@1.23rc2 toolchain@1.23rc2
+$ export GOTOOLCHAIN=go1.23rc2
+```
 
 ## Filter the slice
 
