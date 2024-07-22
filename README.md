@@ -1,4 +1,4 @@
-# it: simply the best iterator utilities for Go
+# it: additional iterator utilities for Go
 
 # The problem
 
