@@ -76,7 +76,7 @@ fmt.Println(slice)
 
 ## Chainable filter
 
-`Chain` provides API similar to other languages, where methods can be chanined together
+`Chain` provides API similar to other languages, where methods can be chained together
 
 ```go
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
