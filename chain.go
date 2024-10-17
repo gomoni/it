@@ -25,33 +25,33 @@ func (g Chain[T]) Collect() []T {
 	return slices.Collect(g.Seq())
 }
 
-type Mapable[T, V any] struct {
+type Mappable[T, V any] struct {
 	seq  iter.Seq[T]
 	none V
 }
 
-func NewMapable[T, V any](seq iter.Seq[T]) Mapable[T, V] {
-	return Mapable[T, V]{
+func NewMappable[T, V any](seq iter.Seq[T]) Mappable[T, V] {
+	return Mappable[T, V]{
 		seq: seq,
 	}
 }
 
-func (g Mapable[T, V]) Seq() iter.Seq[T] {
+func (g Mappable[T, V]) Seq() iter.Seq[T] {
 	return g.seq
 }
 
-func (g Mapable[T, V]) Filter(filterFunc islices.FilterFunc[T]) Mapable[T, V] {
-	return Mapable[T, V]{
+func (g Mappable[T, V]) Filter(filterFunc islices.FilterFunc[T]) Mappable[T, V] {
+	return Mappable[T, V]{
 		seq: islices.Filter(g.seq, filterFunc),
 	}
 }
 
-func (g Mapable[T, V]) Map(mapFunc islices.MapFunc[T, V]) Mapable[V, T] {
-	return Mapable[V, T]{
+func (g Mappable[T, V]) Map(mapFunc islices.MapFunc[T, V]) Mappable[V, T] {
+	return Mappable[V, T]{
 		seq: islices.Map(g.seq, mapFunc),
 	}
 }
 
-func (g Mapable[T, V]) Collect() []T {
+func (g Mappable[T, V]) Collect() []T {
 	return slices.Collect(g.Seq())
 }
