@@ -95,7 +95,7 @@ fmt.Println(slice)
 
 ```go
 	n := []string{"aa", "aaa", "aaaaaaa", "a"}
-	ch := it.NewMapable[string, int](slices.Values(n))
+	ch := it.NewMappable[string, int](slices.Values(n))
 	slice := ch.
 		Filter(func(s string) bool { return len(s) >= 2 }).
 		Map(func(s string) int { return len(s) }).
